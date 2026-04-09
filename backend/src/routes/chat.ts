@@ -55,7 +55,6 @@ router.post("/", async (req: Request, res: Response) => {
       model: "llama-3.1-70b-versatile",
       messages: messages,
       tools: portfolioTools as any,
-      tool_choice: "auto",
       max_tokens: 1024,
       temperature: 0.7,
     });
@@ -77,6 +76,10 @@ router.post("/", async (req: Request, res: Response) => {
       // Execute each tool call
       const toolResults: any[] = [];
       for (const toolCall of initialResponse.choices[0].message.tool_calls) {
+        if (!toolCall.function?.name || !toolCall.function?.arguments) {
+          continue;
+        }
+
         const toolName = toolCall.function.name;
         const toolArgs = JSON.parse(toolCall.function.arguments);
 

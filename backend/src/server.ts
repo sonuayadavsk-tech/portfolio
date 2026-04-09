@@ -10,10 +10,13 @@ dotenv.config({ path: '.env' });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const allowedOrigins = [process.env.FRONTEND_URL, process.env.ADMIN_URL].filter(
+  (origin): origin is string => Boolean(origin)
+);
 
 // Middleware
 app.use(cors({
-  origin: [process.env.FRONTEND_URL, process.env.ADMIN_URL],
+  origin: allowedOrigins.length > 0 ? allowedOrigins : true,
   credentials: true
 }));
 app.use(express.json());

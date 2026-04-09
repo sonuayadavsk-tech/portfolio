@@ -151,7 +151,7 @@ ${projectsInfo}
 - GitHub: ${portfolio.contact.github}
 
 ## Statistics
-${portfolio.stats.map((s: any) => `- ${s.label}: ${s.value}`).join("\n")}
+${(portfolio.stats || []).map((s: any) => `- ${s.label}: ${s.value}`).join("\n")}
     `;
   } catch (error) {
     console.error("Error building context:", error);
