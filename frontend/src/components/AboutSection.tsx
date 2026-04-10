@@ -68,14 +68,15 @@ const AboutSection = () => {
           muted
           loop
           playsInline
-          className="w-full h-full object-cover opacity-30"
+          className="w-full h-full object-cover opacity-80"
         >
           <source
-            src="https://res.cloudinary.com/dla0brxmi/video/upload/v1775626314/12681526_3840_2160_30fps_1_eh8njg.mp4"
+            src="https://res.cloudinary.com/dentbtrzb/video/upload/v1775814047/120409-720891985_medium_vs7bkv.mp4"
             type="video/mp4"
           />
         </video>
-        <div className="absolute inset-0 bg-background/80" />
+        {/* Shorter, sharper split: Dark on the left, clear on the right */}
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 via-50% to-transparent" />
       </div>
 
       <div ref={ref} className="relative z-10 container mx-auto px-6">
@@ -83,14 +84,14 @@ const AboutSection = () => {
           {/* Elegant Framed Image */}
           <div className={`flex justify-center ${isVisible ? "animate-slide-right" : "opacity-0"}`}>
             <div className="relative group p-2">
-              {/* Dynamic Animated Glowing Backdrop */}
-              <div className="absolute inset-0 rounded-[2.5rem] bg-gradient-to-tr from-primary via-primary/40 to-transparent blur-xl opacity-30 group-hover:opacity-80 group-hover:blur-2xl transition-all duration-700 pointer-events-none" />
+              {/* Neutral Silver/White Glowing Backdrop */}
+              <div className="absolute inset-0 rounded-[2.5rem] bg-gradient-to-tr from-white/20 via-white/5 to-transparent blur-xl opacity-20 group-hover:opacity-60 group-hover:blur-2xl transition-all duration-700 pointer-events-none" />
 
               {/* Outer Decorative Floating Glass Frame */}
-              <div className="relative w-64 h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 mx-auto rounded-[2.5rem] overflow-hidden border-2 border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] bg-background/50 backdrop-blur-md transition-all duration-700 ease-out group-hover:scale-[1.03] group-hover:-translate-y-3 group-hover:shadow-[0_0_60px_rgba(0,0,0,0.7)] group-hover:border-white/20">
+              <div className="relative w-64 h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 mx-auto rounded-[2.5rem] overflow-hidden border-2 border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.5)] bg-background/20 backdrop-blur-md transition-all duration-700 ease-out group-hover:scale-[1.03] group-hover:-translate-y-3 group-hover:shadow-[0_0_60px_rgba(0,0,0,0.7)] group-hover:border-white/40">
 
-                {/* Image Overlay for Initial Cinematic Tint */}
-                <div className="absolute inset-0 bg-primary/10 group-hover:bg-transparent transition-colors duration-700 z-10 pointer-events-none" />
+                {/* Image Overlay for Initial Cinematic Tint - Neutralized */}
+                <div className="absolute inset-0 bg-white/5 group-hover:bg-transparent transition-colors duration-700 z-10 pointer-events-none" />
 
                 <img
                   src={profileImage}
@@ -100,9 +101,9 @@ const AboutSection = () => {
                 />
               </div>
 
-              {/* Asymmetrical Floating Colored Orbs */}
-              <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-primary/40 rounded-full blur-2xl animate-pulse pointer-events-none" style={{ animationDuration: '4s' }} />
-              <div className="absolute -top-8 -right-8 w-32 h-32 bg-accent/30 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '6s' }} />
+              {/* Subdued Neutral Floating Orbs */}
+              <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/10 rounded-full blur-2xl animate-pulse pointer-events-none" style={{ animationDuration: '4s' }} />
+              <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '6s' }} />
             </div>
           </div>
 
