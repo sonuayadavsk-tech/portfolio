@@ -3,10 +3,25 @@ import { ArrowDown, Github, Linkedin, Mail } from "lucide-react";
 
 const HeroSection = () => {
   const [loaded, setLoaded] = useState(false);
+  const [resumeUrl, setResumeUrl] = useState<string | null>(null);
 
   useEffect(() => {
     setLoaded(true);
+    fetchResumeUrl();
   }, []);
+
+  const fetchResumeUrl = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const response = await fetch(`${apiUrl}/api/portfolio`);
+      const data = await response.json();
+      if (data.resumeUrl) {
+        setResumeUrl(data.resumeUrl);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -43,6 +58,19 @@ const HeroSection = () => {
               Building scalable web applications with modern technologies.
               Passionate about clean code, cloud solutions & creating impact.
             </p>
+
+            {resumeUrl && (
+              <div className="animate-fade-up stagger-3 mb-8">
+                <a
+                  href={resumeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-8 py-3 rounded-full bg-transparent border border-white/30 text-white hover:bg-white/10 hover:border-white/50 transition-all duration-300 tracking-wide text-sm"
+                >
+                  View Resume
+                </a>
+              </div>
+            )}
 
             <div className="animate-fade-up stagger-4 flex items-center justify-center gap-4 mb-16">
               <a

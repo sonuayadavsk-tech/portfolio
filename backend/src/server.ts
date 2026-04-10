@@ -6,7 +6,7 @@ import portfolioRoutes from "./routes/portfolio.js";
 import chatRoutes from "./routes/chat-groq.js";
 import uploadRoutes from "./routes/upload.js";
 
-dotenv.config({ path: '.env' });
+dotenv.config({ path: '.env', override: true });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -23,9 +23,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGO_URI!)
+mongoose.connect(process.env.MONGO_URI!, { serverSelectionTimeoutMS: 5000 })
   .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.error("❌ MongoDB Error:", err));
+  .catch((err) => {
+    console.error("❌ MongoDB Error:", err);
+    process.exit(1);
+  });
 
 // Routes
 app.use("/api/portfolio", portfolioRoutes);

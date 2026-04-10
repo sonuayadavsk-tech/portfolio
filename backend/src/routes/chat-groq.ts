@@ -123,14 +123,25 @@ ${skillLines.join("\n")}
 
 ## Professional Experience
 ${(portfolio.experience || [])
-  .map(
-    (exp: any) =>
-      `**${exp.role}** at ${exp.company} (${exp.duration})\n${exp.description}`
-  )
-  .join("\n\n")}
+        .map(
+          (exp: any) =>
+            `**${exp.role}** at ${exp.company} (${exp.duration})\n${exp.description}`
+        )
+        .join("\n\n")}
 
 ## Projects
 ${projectsInfo}
+
+## Certificates & Achievements
+${(portfolio.achievements || [])
+        .map(
+          (ach: any) =>
+            `**${ach.title}** from ${ach.issuer} (${ach.date || 'N/A'})\n${ach.description || ''}\nLink: ${ach.link || ''}`
+        )
+        .join("\n\n")}
+
+## Resume Link
+${portfolio.resumeUrl || "Not strictly available right now"}
 
 ## Contact Information
 - Email: ${portfolio.contact?.email}
@@ -150,6 +161,7 @@ ${(portfolio.stats || []).map((s: any) => `- ${s.label}: ${s.value}`).join("\n")
 
 // POST - Chat with AI using Groq (Fast & Free!)
 router.post("/", async (req: Request, res: Response) => {
+  let messages: any[] = [];
   try {
     const { message } = req.body;
 
@@ -239,7 +251,7 @@ You can call tools to browse and read **source code** from GitHub repositories t
 
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-    const messages: any[] = [
+    messages = [
       { role: "system", content: systemPrompt },
       { role: "user", content: message },
     ];
@@ -249,15 +261,32 @@ You can call tools to browse and read **source code** from GitHub repositories t
 
     while (rounds < MAX_TOOL_ROUNDS) {
       rounds += 1;
-      const completion = await groq.chat.completions.create({
-        model: CHAT_MODEL,
-        messages,
-        tools: groqChatTools as any,
-        temperature: 0.7,
-        max_tokens: 1024,
-        top_p: 1,
-        stream: false,
-      } as any);
+      let completion: any;
+      try {
+        completion = await groq.chat.completions.create({
+          model: CHAT_MODEL,
+          messages,
+          tools: groqChatTools as any,
+          temperature: 0.7,
+          max_tokens: 1024,
+          top_p: 1,
+          stream: false,
+        } as any);
+      } catch (err: any) {
+        if (err?.error?.error?.code === "tool_use_failed" || err?.status === 400) {
+          console.warn("Groq failed to use tools correctly, retrying without tools.");
+          completion = await groq.chat.completions.create({
+            model: CHAT_MODEL,
+            messages,
+            temperature: 0.7,
+            max_tokens: 1024,
+            top_p: 1,
+            stream: false,
+          } as any);
+        } else {
+          throw err;
+        }
+      }
 
       const choice = completion.choices[0]?.message;
       if (!choice) {
@@ -331,6 +360,53 @@ You can call tools to browse and read **source code** from GitHub repositories t
       error?.status || error?.response?.status || error?.cause?.status;
 
     if (statusCode === 429) {
+      if (process.env.OPENROUTER_API_KEY) {
+        console.log("Groq rate limited. Falling back to OpenRouter...");
+        try {
+          // Strip tool calls for safety on OpenRouter fallback
+          const cleanMessages = messages.filter(m => m.role !== "tool").map(m => {
+            if (m.role === "assistant") {
+              return { role: "assistant", content: m.content || "" };
+            }
+            return m;
+          });
+
+          const orResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY.trim()}`,
+              "HTTP-Referer": "http://localhost:5000",
+              "X-Title": "Portfolio Chatbot"
+            },
+            body: JSON.stringify({
+              model: "meta-llama/llama-3.3-70b-instruct",
+              messages: cleanMessages,
+            })
+          });
+          const orData: any = await orResponse.json();
+          if (orData.choices && orData.choices.length > 0) {
+            return res.json({
+              message: orData.choices[0].message.content,
+              source: "openrouter-fallback",
+              model: orData.model || "meta-llama/llama-3.3-70b-instruct",
+              hasContext: true,
+              portfolioDataIncluded: true,
+              usedGithubTools: false,
+            });
+          } else {
+            console.error("OpenRouter returned invalid data:", JSON.stringify(orData, null, 2));
+            return res.status(502).json({
+              error: "OpenRouter Fallback Failed",
+              message: "The OpenRouter API failed to complete the request: " + (orData.error?.message || JSON.stringify(orData))
+            });
+          }
+        } catch (orError) {
+          console.error("OpenRouter fallback crashed:", orError);
+          return res.status(500).json({ error: "OpenRouter crash", message: String(orError) });
+        }
+      }
+
       const retryAfterHeader =
         error?.response?.headers?.["retry-after"] ||
         error?.headers?.["retry-after"];
@@ -351,6 +427,8 @@ You can call tools to browse and read **source code** from GitHub repositories t
     res.status(500).json({
       error: "Failed to process chat request",
       hint: "Make sure GROQ_API_KEY is set in backend/.env",
+      actualError: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
     });
   }
 });

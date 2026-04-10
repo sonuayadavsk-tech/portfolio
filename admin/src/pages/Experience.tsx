@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { portfolioAPI } from "../api";
+import { portfolioAPI, uploadAPI } from "../api";
 import "./Admin.css";
 
 interface Experience {
@@ -9,6 +9,7 @@ interface Experience {
   description: string;
   duration: string;
   skills: string[];
+  progressCardImage?: string;
 }
 
 const AdminExperience: React.FC = () => {
@@ -19,6 +20,7 @@ const AdminExperience: React.FC = () => {
     description: "",
     duration: "",
     skills: [],
+    progressCardImage: "",
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -31,7 +33,7 @@ const AdminExperience: React.FC = () => {
     try {
       setLoading(true);
       const response = await portfolioAPI.getPortfolio();
-      setExperiences(response.data.experience);
+      setExperiences(response.data.experience || []);
     } catch (error) {
       setMessage("❌ Failed to fetch experience");
     } finally {
@@ -56,6 +58,7 @@ const AdminExperience: React.FC = () => {
         description: "",
         duration: "",
         skills: [],
+        progressCardImage: "",
       });
       fetchExperience();
     } catch (error) {
@@ -87,6 +90,22 @@ const AdminExperience: React.FC = () => {
   const handleSkillsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const skills = e.target.value.split(",").map((skill) => skill.trim());
     setNewExperience({ ...newExperience, skills });
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    try {
+      setLoading(true);
+      setMessage("⏳ Uploading image...");
+      const res = await uploadAPI.uploadProgressCardImage(files[0]);
+      setNewExperience({ ...newExperience, progressCardImage: res.data.imageUrl });
+      setMessage("✅ Image uploaded!");
+    } catch (error) {
+      setMessage("❌ Image upload failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -130,6 +149,13 @@ const AdminExperience: React.FC = () => {
           value={newExperience.skills.join(", ")}
           onChange={handleSkillsChange}
         />
+        <div className="progress-card-upload mt-4 mb-4">
+          <label className="file-input-label">Upload Progress Card (Optional)</label>
+          <input type="file" accept="image/*" onChange={handleImageUpload} disabled={loading} />
+          {newExperience.progressCardImage && (
+            <p className="image-url text-xs mt-1 text-green-500">Image successfully uploaded and attached.</p>
+          )}
+        </div>
         <button onClick={handleAddExperience} disabled={loading}>
           {loading ? "Adding..." : "➕ Add Experience"}
         </button>
@@ -148,11 +174,12 @@ const AdminExperience: React.FC = () => {
                 <p>{exp.description}</p>
                 <p className="duration">📅 {exp.duration}</p>
                 <p className="skills">Skills: {exp.skills.join(", ")}</p>
+                {exp.progressCardImage && <p className="image-url mt-2 font-semibold">🖼️ Progress Card Linked</p>}
               </div>
               <button
                 onClick={() => handleDeleteExperience(index)}
                 disabled={loading}
-                className="delete-btn"
+                className="delete-btn mt-4"
               >
                 🗑️ Delete
               </button>

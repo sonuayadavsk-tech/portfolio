@@ -229,8 +229,6 @@ const ProjectsSection = () => {
 
         <div
           className="projects-carousel max-w-6xl mx-auto"
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
           onKeyDown={(e) => {
             if (slides.length <= 1) return;
             if (e.key === "ArrowLeft") {
@@ -280,11 +278,6 @@ const ProjectsSection = () => {
                         />
                       ))}
                     </div>
-                  )}
-                  {slides.length > 1 && (
-                    <p className="text-center text-xs text-muted-foreground mt-3">
-                      {isPaused ? "Paused — move cursor away to resume" : "Auto-rotating — hover to pause"}
-                    </p>
                   )}
                 </div>
                 {slides.length > 1 && (

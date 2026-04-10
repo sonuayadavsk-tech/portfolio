@@ -3,9 +3,10 @@ import AdminProfile from "./pages/Profile";
 import AdminProjects from "./pages/Projects";
 import AdminExperience from "./pages/Experience";
 import AdminSkills from "./pages/Skills";
+import AdminCertificates from "./pages/Certificates";
 import "./App.css";
 
-type Tab = "profile" | "projects" | "experience" | "skills";
+type Tab = "profile" | "projects" | "experience" | "skills" | "certificates";
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>("profile");
@@ -45,6 +46,12 @@ const App: React.FC = () => {
           >
             🛠️ Skills
           </button>
+          <button
+            className={`nav-btn ${activeTab === "certificates" ? "active" : ""}`}
+            onClick={() => setActiveTab("certificates")}
+          >
+            🏆 Certificates
+          </button>
         </nav>
 
         <main className="admin-content">
@@ -52,6 +59,7 @@ const App: React.FC = () => {
           {activeTab === "projects" && <AdminProjects />}
           {activeTab === "experience" && <AdminExperience />}
           {activeTab === "skills" && <AdminSkills />}
+          {activeTab === "certificates" && <AdminCertificates />}
         </main>
       </div>
 

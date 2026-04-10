@@ -8,7 +8,7 @@ const router = express.Router();
 router.get("/", async (req: Request, res: Response) => {
   try {
     let portfolio = await Portfolio.findOne();
-    
+
     // If no portfolio exists, create default one
     if (!portfolio) {
       portfolio = new Portfolio({
@@ -36,25 +36,25 @@ router.get("/", async (req: Request, res: Response) => {
 router.put("/", async (req: Request, res: Response) => {
   try {
     const { password } = req.query;
-    
+
     // Simple password protection
     if (password !== process.env.ADMIN_PASSWORD) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    
+
     // Filter out empty stats
     if (req.body.stats) {
       req.body.stats = req.body.stats.filter((stat: any) => stat.label && stat.value);
     }
-    
+
     let portfolio = await Portfolio.findOne();
-    
+
     if (!portfolio) {
       portfolio = new Portfolio(req.body);
     } else {
       Object.assign(portfolio, req.body);
     }
-    
+
     await portfolio.save();
     res.json({ message: "Portfolio updated successfully", portfolio });
   } catch (error: any) {
@@ -69,24 +69,24 @@ router.put("/:section", async (req: Request, res: Response) => {
   try {
     const { password } = req.query;
     const { section } = req.params;
-    
+
     // Password protection
     if (password !== process.env.ADMIN_PASSWORD) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    
+
     // Validate section
-    const validSections = ["projects", "experience", "skills", "bio", "contact"];
+    const validSections = ["projects", "experience", "skills", "bio", "contact", "achievements"];
     if (!validSections.includes(section)) {
       return res.status(400).json({ error: "Invalid section" });
     }
-    
+
     let portfolio = await Portfolio.findOne();
-    
+
     if (!portfolio) {
       return res.status(404).json({ error: "Portfolio not found" });
     }
-    
+
     // Update the specific section
     if (section === "projects") {
       // Fetch GitHub data for projects with GitHub URLs
@@ -116,6 +116,8 @@ router.put("/:section", async (req: Request, res: Response) => {
       portfolio.projects = updatedProjects;
     } else if (section === "experience") {
       portfolio.experience = req.body.experience;
+    } else if (section === "achievements") {
+      portfolio.achievements = req.body.achievements;
     } else if (section === "skills") {
       // Handle both flat array and categorized skills
       if (req.body.skillCategories) {
@@ -128,7 +130,7 @@ router.put("/:section", async (req: Request, res: Response) => {
     } else if (section === "contact") {
       portfolio.contact = req.body.contact;
     }
-    
+
     await portfolio.save();
     res.json({ message: `${section} updated successfully`, portfolio });
   } catch (error: any) {
@@ -142,16 +144,16 @@ router.put("/:section", async (req: Request, res: Response) => {
 router.post("/projects", async (req: Request, res: Response) => {
   try {
     const { password } = req.query;
-    
+
     if (password !== process.env.ADMIN_PASSWORD) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    
+
     const portfolio = await Portfolio.findOne();
     if (!portfolio) {
       return res.status(404).json({ error: "Portfolio not found" });
     }
-    
+
     const project = req.body;
 
     // Fetch GitHub data if GitHub URL is provided
@@ -229,16 +231,16 @@ router.put("/projects/:id", async (req: Request, res: Response) => {
 router.delete("/projects/:id", async (req: Request, res: Response) => {
   try {
     const { password } = req.query;
-    
+
     if (password !== process.env.ADMIN_PASSWORD) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    
+
     const portfolio = await Portfolio.findOne();
     if (!portfolio) {
       return res.status(404).json({ error: "Portfolio not found" });
     }
-    
+
     portfolio.projects = portfolio.projects.filter(
       (p) => p._id?.toString() !== req.params.id
     );

@@ -10,23 +10,23 @@ const api = axios.create({
 export const portfolioAPI = {
   // GET
   getPortfolio: () => api.get("/api/portfolio"),
-  
+
   // UPDATE
   updatePortfolio: (data: any) =>
     api.put("/api/portfolio", data, {
       params: { password: ADMIN_PASSWORD },
     }),
-  
+
   updateSection: (section: string, data: any) =>
     api.put(`/api/portfolio/${section}`, data, {
       params: { password: ADMIN_PASSWORD },
     }),
-  
+
   addProject: (project: any) =>
     api.post("/api/portfolio/projects", project, {
       params: { password: ADMIN_PASSWORD },
     }),
-  
+
   deleteProject: (projectId: string) =>
     api.delete(`/api/portfolio/projects/${projectId}`, {
       params: { password: ADMIN_PASSWORD },
@@ -56,6 +56,10 @@ export const uploadAPI = {
       params: { password: ADMIN_PASSWORD },
     });
   },
+
+  uploadProgressCardImage: (file: File) => uploadAPI.uploadProjectImage(file),
+  uploadCertificateImage: (file: File) => uploadAPI.uploadProjectImage(file),
+  uploadResumeFile: (file: File) => uploadAPI.uploadProjectImage(file),
 };
 
 export const chatAPI = {

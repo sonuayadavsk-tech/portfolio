@@ -8,6 +8,7 @@ interface Experience {
   duration?: string;
   description?: string;
   skills?: string[];
+  progressCardImage?: string;
   // Additional fields for compatibility
   title?: string;
   org?: string;
@@ -113,66 +114,75 @@ const ExperienceSection = () => {
           <div className="space-y-10">
             {displayExperience.length > 0
               ? displayExperience.map((item, i) => (
-                  <div
-                    key={`${item.role || item.title}-${i}`}
-                    className={`relative pl-16 ${isVisible ? `animate-fade-up stagger-${(i % 10) + 2}` : "opacity-0"}`}
-                  >
-                    {/* Icon */}
-                    <div className="absolute left-0 w-12 h-12 rounded-full bg-card border border-border flex items-center justify-center">
-                      <Briefcase size={20} className="text-primary" />
-                    </div>
-
-                    <div className="p-5 rounded-xl bg-card border border-border hover:border-primary/30 transition-all duration-300">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
-                        <h3 className="font-heading text-lg font-semibold">{item.role || item.title}</h3>
-                        <span className="text-xs text-primary font-body">{item.duration || item.period}</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground font-body mb-3">{item.company || item.org}</p>
-                      {item.description && (
-                        <p className="text-sm text-muted-foreground font-body mb-3">{item.description}</p>
-                      )}
-                      {item.skills && item.skills.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {item.skills.map((skill) => (
-                            <span
-                              key={skill}
-                              className="text-xs px-2.5 py-1 rounded-full border border-primary/30 text-primary"
-                            >
-                              {skill}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                <div
+                  key={`${item.role || item.title}-${i}`}
+                  className={`relative pl-16 ${isVisible ? `animate-fade-up stagger-${(i % 10) + 2}` : "opacity-0"}`}
+                >
+                  {/* Icon */}
+                  <div className="absolute left-0 w-12 h-12 rounded-full bg-card border border-border flex items-center justify-center">
+                    <Briefcase size={20} className="text-primary" />
                   </div>
-                ))
-              : defaultTimeline.map((item, i) => (
-                  <div
-                    key={item.title + item.org}
-                    className={`relative pl-16 ${isVisible ? `animate-fade-up stagger-${i + 2}` : "opacity-0"}`}
-                  >
-                    {/* Icon */}
-                    <div className="absolute left-0 w-12 h-12 rounded-full bg-card border border-border flex items-center justify-center">
-                      <item.icon size={20} className="text-primary" />
-                    </div>
 
-                    <div className="p-5 rounded-xl bg-card border border-border hover:border-primary/30 transition-all duration-300">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
-                        <h3 className="font-heading text-lg font-semibold">{item.title}</h3>
-                        <span className="text-xs text-primary font-body">{item.period}</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground font-body mb-3">{item.org}</p>
-                      <ul className="space-y-1.5">
-                        {item.points.map((pt) => (
-                          <li key={pt} className="text-sm text-muted-foreground font-body flex items-start gap-2">
-                            <span className="w-1 h-1 rounded-full bg-primary mt-2 shrink-0" />
-                            {pt}
-                          </li>
+                  <div className="p-5 rounded-xl bg-card border border-border hover:border-primary/30 transition-all duration-300">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+                      <h3 className="font-heading text-lg font-semibold">{item.role || item.title}</h3>
+                      <span className="text-xs text-primary font-body">{item.duration || item.period}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground font-body mb-3">{item.company || item.org}</p>
+                    {item.description && (
+                      <p className="text-sm text-muted-foreground font-body mb-3">{item.description}</p>
+                    )}
+                    {item.skills && item.skills.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {item.skills.map((skill) => (
+                          <span
+                            key={skill}
+                            className="text-xs px-2.5 py-1 rounded-full border border-primary/30 text-primary"
+                          >
+                            {skill}
+                          </span>
                         ))}
-                      </ul>
-                    </div>
+                      </div>
+                    )}
+                    {item.progressCardImage && (
+                      <div className="mt-4 rounded-xl overflow-hidden border border-border">
+                        <img
+                          src={item.progressCardImage}
+                          alt={`${item.role || item.title} progress`}
+                          className="w-full h-48 md:h-64 object-cover hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                    )}
                   </div>
-                ))}
+                </div>
+              ))
+              : defaultTimeline.map((item, i) => (
+                <div
+                  key={item.title + item.org}
+                  className={`relative pl-16 ${isVisible ? `animate-fade-up stagger-${i + 2}` : "opacity-0"}`}
+                >
+                  {/* Icon */}
+                  <div className="absolute left-0 w-12 h-12 rounded-full bg-card border border-border flex items-center justify-center">
+                    <item.icon size={20} className="text-primary" />
+                  </div>
+
+                  <div className="p-5 rounded-xl bg-card border border-border hover:border-primary/30 transition-all duration-300">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+                      <h3 className="font-heading text-lg font-semibold">{item.title}</h3>
+                      <span className="text-xs text-primary font-body">{item.period}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground font-body mb-3">{item.org}</p>
+                    <ul className="space-y-1.5">
+                      {item.points.map((pt) => (
+                        <li key={pt} className="text-sm text-muted-foreground font-body flex items-start gap-2">
+                          <span className="w-1 h-1 rounded-full bg-primary mt-2 shrink-0" />
+                          {pt}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ))}
           </div>
         </div>
       </div>

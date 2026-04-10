@@ -36,6 +36,7 @@ interface IExperience {
   description: string;
   duration: string;
   skills: string[];
+  progressCardImage?: string;
 }
 
 interface ISkillCategory {
@@ -52,7 +53,16 @@ interface IPortfolio extends Document {
   skills: string[];
   skillCategories?: ISkillCategory[];
   projects: IProject[];
+  achievements?: Array<{
+    title: string;
+    issuer: string;
+    date: string;
+    description?: string;
+    link?: string;
+    image?: string;
+  }>;
   experience: IExperience[];
+  resumeUrl?: string;
   contact: {
     email?: string;
     phone?: string;
@@ -81,6 +91,17 @@ const PortfolioSchema = new Schema<IPortfolio>(
       {
         title: String,
         skills: [String],
+      },
+    ],
+    resumeUrl: String,
+    achievements: [
+      {
+        title: { type: String, required: true },
+        issuer: { type: String, required: true },
+        date: String,
+        description: String,
+        link: String,
+        image: String,
       },
     ],
     projects: [
@@ -119,6 +140,7 @@ const PortfolioSchema = new Schema<IPortfolio>(
         description: { type: String, required: true },
         duration: { type: String, required: true },
         skills: [String],
+        progressCardImage: String,
       },
     ],
     contact: {

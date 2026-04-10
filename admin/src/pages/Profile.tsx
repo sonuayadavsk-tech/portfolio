@@ -13,6 +13,7 @@ interface PortfolioData {
   tagline?: string;
   stats?: Stat[];
   profileImage?: string;
+  resumeUrl?: string;
   contact?: {
     email?: string;
     phone?: string;
@@ -29,6 +30,7 @@ const AdminProfile: React.FC = () => {
     tagline: "",
     stats: [],
     profileImage: "",
+    resumeUrl: "",
     contact: {
       email: "",
       phone: "",
@@ -90,6 +92,24 @@ const AdminProfile: React.FC = () => {
     } catch (error: any) {
       setMessage(`❌ Failed to upload image: ${error.response?.data?.error || error.message}`);
       console.error("Upload error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    try {
+      setLoading(true);
+      setMessage("⏳ Uploading resume file...");
+      const res = await uploadAPI.uploadResumeFile(files[0]);
+
+      setPortfolio({ ...portfolio, resumeUrl: res.data.imageUrl });
+      setMessage("✅ Resume uploaded successfully!");
+    } catch (error: any) {
+      setMessage(`❌ Failed to upload resume: ${error.response?.data?.error || error.message}`);
     } finally {
       setLoading(false);
     }
@@ -202,6 +222,24 @@ const AdminProfile: React.FC = () => {
           className="form-input"
           disabled={loading}
         />
+
+        <h4 className="mt-4 mb-2 font-semibold">📄 Resume</h4>
+        <div className="flex flex-col gap-2">
+          <input
+            type="url"
+            name="resumeUrl"
+            value={portfolio.resumeUrl || ""}
+            onChange={handleInputChange}
+            placeholder="Resume Link / URL (e.g., Google Drive link)"
+            className="form-input"
+            disabled={loading}
+          />
+          <div className="resume-upload-section border p-4 rounded-md bg-white">
+            <label className="file-input-label block mb-2 font-medium">Or Upload Resume (PDF or Image)</label>
+            <input type="file" accept=".pdf,image/*" onChange={handleResumeUpload} disabled={loading} />
+            {portfolio.resumeUrl && <p className="text-xs text-green-600 mt-2">Resume file is currently attached to your portfolio.</p>}
+          </div>
+        </div>
       </div>
 
       {/* Bio Section */}
