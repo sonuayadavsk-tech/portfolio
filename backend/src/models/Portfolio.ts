@@ -37,6 +37,7 @@ interface IExperience {
   duration: string;
   skills: string[];
   progressCardImage?: string;
+  link?: string;
 }
 
 interface ISkillCategory {

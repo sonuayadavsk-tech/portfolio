@@ -59,6 +59,7 @@ const AdminExperience: React.FC = () => {
     try {
       setLoading(true);
       const updatedExperiences = [...experiences, { ...newExperience, skills }];
+      console.log("📤 Admin: Sending updated experience section:", JSON.stringify(updatedExperiences, null, 2));
       await portfolioAPI.updateSection("experience", { experience: updatedExperiences });
       setMessage("✅ Experience added successfully!");
       setNewExperience({
@@ -102,6 +103,7 @@ const AdminExperience: React.FC = () => {
 
     try {
       setLoading(true);
+      console.log("📤 Admin: Saving edited experience section:", JSON.stringify(updatedExperiences, null, 2));
       await portfolioAPI.updateSection("experience", { experience: updatedExperiences });
       setMessage("✅ Experience updated successfully!");
       cancelEdit();
