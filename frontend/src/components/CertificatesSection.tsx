@@ -79,30 +79,10 @@ const CertificatesSection = () => {
                                         alt={ach.title}
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                     />
-                                    {ach.link && (
-                                        <a
-                                            href={ach.link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="absolute top-4 right-4 p-2 bg-background/80 hover:bg-primary hover:text-white backdrop-blur-sm rounded-full transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
-                                        >
-                                            <ExternalLink size={18} />
-                                        </a>
-                                    )}
                                 </div>
                             ) : (
                                 <div className="relative h-32 overflow-hidden bg-primary/10 flex items-center justify-center">
                                     <Award size={40} className="text-primary/50" />
-                                    {ach.link && (
-                                        <a
-                                            href={ach.link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="absolute top-4 right-4 p-2 bg-background/80 hover:bg-primary hover:text-white backdrop-blur-sm rounded-full transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
-                                        >
-                                            <ExternalLink size={18} />
-                                        </a>
-                                    )}
                                 </div>
                             )}
 
@@ -128,7 +108,7 @@ const CertificatesSection = () => {
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-2 text-sm text-primary hover:underline font-medium mt-auto"
                                     >
-                                        View Certificate <ExternalLink size={14} />
+                                        View Link <ExternalLink size={14} />
                                     </a>
                                 )}
                             </div>

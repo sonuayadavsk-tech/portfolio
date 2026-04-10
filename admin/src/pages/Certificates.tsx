@@ -202,7 +202,7 @@ const AdminCertificates: React.FC = () => {
                 <input
                     type="url"
                     name="link"
-                    placeholder="Certificate Validation URL or Link"
+                    placeholder="Link (Optional)"
                     value={newAchievement.link || ""}
                     onChange={(e) => handleInputChange(e, 'new')}
                 />
@@ -265,7 +265,7 @@ const AdminCertificates: React.FC = () => {
                                         <input
                                             type="url"
                                             name="link"
-                                            placeholder="Certificate Link"
+                                            placeholder="Link"
                                             value={editDraft.link || ""}
                                             onChange={(e) => handleInputChange(e, 'edit')}
                                             className="mb-2 w-full"
