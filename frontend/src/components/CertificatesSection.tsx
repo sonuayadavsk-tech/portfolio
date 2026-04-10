@@ -41,9 +41,19 @@ const CertificatesSection = () => {
     }
 
     return (
-        <section id="certificates" className="py-24 bg-background relative overflow-hidden">
+        <section id="certificates" className="py-24 relative overflow-hidden">
+            {/* Image Background */}
+            <div className="absolute inset-0 z-0">
+                <img
+                    src="https://res.cloudinary.com/dentbtrzb/image/upload/v1775812288/luis-vasconcelos-wxj729MaPRY-unsplash_b4zzvn.jpg"
+                    alt="Background"
+                    className="w-full h-full object-cover opacity-20"
+                />
+                <div className="absolute inset-0 bg-background/85" />
+            </div>
+
             {/* Background decoration */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[100px] pointer-events-none z-0" />
 
             <div ref={ref} className="relative z-10 container mx-auto px-6 max-w-6xl">
                 <div className="text-center mb-16">

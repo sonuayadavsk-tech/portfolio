@@ -80,15 +80,29 @@ const AboutSection = () => {
 
       <div ref={ref} className="relative z-10 container mx-auto px-6">
         <div className="grid md:grid-cols-2 gap-16 items-center">
-          {/* Image */}
-          <div className={`${isVisible ? "animate-slide-right" : "opacity-0"}`}>
-            <div className="relative">
-              <div className="absolute -inset-4 rounded-2xl bg-primary/10 blur-2xl" />
-              <img
-                src={profileImage}
-                alt="Sonu Yadav"
-                className="relative rounded-2xl w-full max-w-md mx-auto object-cover aspect-square glow-primary"
-              />
+          {/* Elegant Framed Image */}
+          <div className={`flex justify-center ${isVisible ? "animate-slide-right" : "opacity-0"}`}>
+            <div className="relative group p-2">
+              {/* Dynamic Animated Glowing Backdrop */}
+              <div className="absolute inset-0 rounded-[2.5rem] bg-gradient-to-tr from-primary via-primary/40 to-transparent blur-xl opacity-30 group-hover:opacity-80 group-hover:blur-2xl transition-all duration-700 pointer-events-none" />
+
+              {/* Outer Decorative Floating Glass Frame */}
+              <div className="relative w-64 h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 mx-auto rounded-[2.5rem] overflow-hidden border-2 border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] bg-background/50 backdrop-blur-md transition-all duration-700 ease-out group-hover:scale-[1.03] group-hover:-translate-y-3 group-hover:shadow-[0_0_60px_rgba(0,0,0,0.7)] group-hover:border-white/20">
+
+                {/* Image Overlay for Initial Cinematic Tint */}
+                <div className="absolute inset-0 bg-primary/10 group-hover:bg-transparent transition-colors duration-700 z-10 pointer-events-none" />
+
+                <img
+                  src={profileImage}
+                  alt="Sonu Yadav Profile"
+                  className="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-110 group-hover:rotate-2"
+                  loading="lazy"
+                />
+              </div>
+
+              {/* Asymmetrical Floating Colored Orbs */}
+              <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-primary/40 rounded-full blur-2xl animate-pulse pointer-events-none" style={{ animationDuration: '4s' }} />
+              <div className="absolute -top-8 -right-8 w-32 h-32 bg-accent/30 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '6s' }} />
             </div>
           </div>
 
