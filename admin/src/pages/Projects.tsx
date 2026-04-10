@@ -41,6 +41,8 @@ const AdminProjects: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Project | null>(null);
   const [uploadingEditImage, setUploadingEditImage] = useState(false);
+  const [newSkillsStr, setNewSkillsStr] = useState("");
+  const [draftSkillsStr, setDraftSkillsStr] = useState("");
 
   useEffect(() => {
     fetchProjects();
@@ -108,16 +110,18 @@ const AdminProjects: React.FC = () => {
     try {
       setLoading(true);
       setMessage("");
+      const skills = newSkillsStr.split(",").map(s => s.trim()).filter(Boolean);
       await portfolioAPI.addProject({
         name: newProject.name.trim(),
         description: newProject.description.trim(),
-        skills: newProject.skills.filter(Boolean),
+        skills: skills,
         link: newProject.link?.trim() || undefined,
         github: newProject.github?.trim() || undefined,
         image: newProject.image?.trim() || undefined,
       });
       setMessage("✅ Project added successfully!");
       setNewProject(emptyProject());
+      setNewSkillsStr("");
       notifyPortfolioSiteProjectsChanged();
       fetchProjects();
     } catch (err) {
@@ -134,6 +138,7 @@ const AdminProjects: React.FC = () => {
       ...project,
       skills: [...(project.skills || [])],
     });
+    setDraftSkillsStr((project.skills || []).join(", "));
     setMessage("");
   };
 
@@ -151,15 +156,17 @@ const AdminProjects: React.FC = () => {
     try {
       setLoading(true);
       setMessage("");
+      const skills = draftSkillsStr.split(",").map(s => s.trim()).filter(Boolean);
       await portfolioAPI.updateProject(draft._id, {
         name: draft.name.trim(),
         description: draft.description.trim(),
-        skills: draft.skills.filter(Boolean),
+        skills: skills,
         link: draft.link?.trim() || "",
         github: draft.github?.trim() || "",
         image: draft.image?.trim() || "",
       });
       setMessage("✅ Project updated!");
+      setDraftSkillsStr("");
       cancelEdit();
       notifyPortfolioSiteProjectsChanged();
       fetchProjects();
@@ -200,11 +207,10 @@ const AdminProjects: React.FC = () => {
   };
 
   const handleSkillsChange = (e: React.ChangeEvent<HTMLInputElement>, target: "new" | "draft") => {
-    const skills = e.target.value.split(",").map((s) => s.trim()).filter(Boolean);
     if (target === "new") {
-      setNewProject((p) => ({ ...p, skills }));
+      setNewSkillsStr(e.target.value);
     } else {
-      setDraft((d) => (d ? { ...d, skills } : null));
+      setDraftSkillsStr(e.target.value);
     }
   };
 
@@ -267,7 +273,7 @@ const AdminProjects: React.FC = () => {
         <input
           type="text"
           placeholder="React, Node.js, MongoDB, …"
-          value={newProject.skills.join(", ")}
+          value={newSkillsStr}
           onChange={(e) => handleSkillsChange(e, "new")}
         />
 
@@ -340,7 +346,7 @@ const AdminProjects: React.FC = () => {
                   <label className="admin-label">Tech stack</label>
                   <input
                     type="text"
-                    value={draft.skills.join(", ")}
+                    value={draftSkillsStr}
                     onChange={(e) => handleSkillsChange(e, "draft")}
                   />
                   <label className="admin-label">GitHub</label>

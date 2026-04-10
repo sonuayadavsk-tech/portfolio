@@ -25,6 +25,8 @@ const AdminExperience: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
+  const [skillsStr, setSkillsStr] = useState("");
+
   useEffect(() => {
     fetchExperience();
   }, []);
@@ -42,6 +44,7 @@ const AdminExperience: React.FC = () => {
   };
 
   const handleAddExperience = async () => {
+    const skills = skillsStr.split(",").map(s => s.trim()).filter(Boolean);
     if (!newExperience.company || !newExperience.role || !newExperience.duration || !newExperience.description) {
       setMessage("⚠️ Please fill in all required fields (Company, Role, Duration, Description)");
       return;
@@ -49,7 +52,7 @@ const AdminExperience: React.FC = () => {
 
     try {
       setLoading(true);
-      const updatedExperiences = [...experiences, newExperience];
+      const updatedExperiences = [...experiences, { ...newExperience, skills }];
       await portfolioAPI.updateSection("experience", { experience: updatedExperiences });
       setMessage("✅ Experience added successfully!");
       setNewExperience({
@@ -60,6 +63,7 @@ const AdminExperience: React.FC = () => {
         skills: [],
         progressCardImage: "",
       });
+      setSkillsStr("");
       fetchExperience();
     } catch (error) {
       setMessage("❌ Failed to add experience");
@@ -88,8 +92,7 @@ const AdminExperience: React.FC = () => {
   };
 
   const handleSkillsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const skills = e.target.value.split(",").map((skill) => skill.trim());
-    setNewExperience({ ...newExperience, skills });
+    setSkillsStr(e.target.value);
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,7 +149,7 @@ const AdminExperience: React.FC = () => {
         <input
           type="text"
           placeholder="Skills (comma-separated)"
-          value={newExperience.skills.join(", ")}
+          value={skillsStr}
           onChange={handleSkillsChange}
         />
         <div className="progress-card-upload mt-4 mb-4">
