@@ -24,7 +24,8 @@ router.get("/", async (req: Request, res: Response) => {
       });
       await portfolio.save();
     }
-    
+
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate");
     res.json(portfolio);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch portfolio" });
@@ -171,6 +172,56 @@ router.post("/projects", async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error("❌ Error adding project:", error.message);
     res.status(500).json({ error: "Failed to add project", details: error.message });
+  }
+});
+
+// PUT - Update one project by id
+router.put("/projects/:id", async (req: Request, res: Response) => {
+  try {
+    const { password } = req.query;
+
+    if (password !== process.env.ADMIN_PASSWORD) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const portfolio = await Portfolio.findOne();
+    if (!portfolio) {
+      return res.status(404).json({ error: "Portfolio not found" });
+    }
+
+    const projectIndex = portfolio.projects.findIndex(
+      (p) => p._id?.toString() === req.params.id
+    );
+
+    if (projectIndex === -1) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    const existing = portfolio.projects[projectIndex] as any;
+    const body = req.body || {};
+
+    const allowed = ["name", "description", "skills", "link", "github", "image"] as const;
+    for (const key of allowed) {
+      if (body[key] !== undefined) {
+        existing[key] = body[key];
+      }
+    }
+
+    if (body.github && isValidGitHubUrl(body.github)) {
+      const githubData = await fetchGitHubRepoData(body.github);
+      if (githubData) {
+        existing.githubData = githubData;
+      }
+    } else if (body.github === "" || body.github === null) {
+      existing.githubData = undefined;
+    }
+
+    portfolio.projects[projectIndex] = existing;
+    await portfolio.save();
+    res.json({ message: "Project updated successfully", portfolio, project: existing });
+  } catch (error: any) {
+    console.error("❌ Error updating project:", error.message);
+    res.status(500).json({ error: "Failed to update project", details: error.message });
   }
 });
 

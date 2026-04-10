@@ -31,6 +31,11 @@ export const portfolioAPI = {
     api.delete(`/api/portfolio/projects/${projectId}`, {
       params: { password: ADMIN_PASSWORD },
     }),
+
+  updateProject: (projectId: string, project: Record<string, unknown>) =>
+    api.put(`/api/portfolio/projects/${projectId}`, project, {
+      params: { password: ADMIN_PASSWORD },
+    }),
 };
 
 export const uploadAPI = {

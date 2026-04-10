@@ -1,10 +1,15 @@
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
-import { useEffect, useState } from "react";
-import { ExternalLink, Github } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight, ExternalLink, Github } from "lucide-react";
+import "./ProjectsSection.css";
+
+const ROTATE_MS = 5500;
+const PORTFOLIO_PROJECTS_STORAGE_KEY = "portfolio_projects_refresh";
 
 interface Project {
   _id?: string;
-  title: string;
+  title?: string;
+  name?: string;
   description: string;
   skills?: string[];
   link?: string;
@@ -39,17 +44,15 @@ const ProjectsSection = () => {
   const { ref, isVisible } = useScrollAnimation(0.1);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
-  useEffect(() => {
-    fetchProjects();
-  }, []);
-
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
-      const response = await fetch(`${apiUrl}/api/portfolio`);
+      const response = await fetch(`${apiUrl}/api/portfolio`, { cache: "no-store" });
       const data: Portfolio = await response.json();
-      if (data.projects && data.projects.length > 0) {
+      if (Array.isArray(data.projects)) {
         setProjects(data.projects);
       }
     } catch (error) {
@@ -57,9 +60,153 @@ const ProjectsSection = () => {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    void fetchProjects();
+  }, [fetchProjects]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void fetchProjects();
+    };
+    const onFocus = () => void fetchProjects();
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === PORTFOLIO_PROJECTS_STORAGE_KEY) void fetchProjects();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, [fetchProjects]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      if (document.visibilityState === "visible") void fetchProjects();
+    }, 45000);
+    return () => clearInterval(id);
+  }, [fetchProjects]);
+
+  const slides = useMemo(
+    () =>
+      projects.length > 0
+        ? projects
+        : (defaultProjects as unknown as Project[]),
+    [projects]
+  );
+
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    if (isPaused) return;
+
+    const id = window.setInterval(() => {
+      setCurrentIndex((i) => (i + 1) % slides.length);
+    }, ROTATE_MS);
+
+    return () => window.clearInterval(id);
+  }, [slides.length, isPaused]);
+
+  useEffect(() => {
+    setCurrentIndex((i) => (slides.length === 0 ? 0 : Math.min(i, slides.length - 1)));
+  }, [slides.length]);
+
+  const goPrev = () => {
+    if (slides.length <= 1) return;
+    setCurrentIndex((i) => (i - 1 + slides.length) % slides.length);
   };
 
-  const displayProjects = projects.length > 0 ? projects : [];
+  const goNext = () => {
+    if (slides.length <= 1) return;
+    setCurrentIndex((i) => (i + 1) % slides.length);
+  };
+
+  const renderProjectCard = (
+    project: {
+      _id?: string;
+      title: string;
+      description: string;
+      skills?: string[];
+      link?: string;
+      github?: string;
+      image?: string;
+      tech?: string[];
+      subtitle?: string;
+    },
+    _idx: number
+  ) => {
+    const tags = project.skills || project.tech || [];
+    const displayTitle = project.title || project.name || "Project";
+    const projectImage =
+      project.image ||
+      "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80";
+
+    return (
+      <article
+        key={project._id || displayTitle}
+        className={`group laptop-project-card projects-carousel-slide ${isVisible ? "animate-scale-in stagger-2" : "opacity-0"}`}
+      >
+        <div className="desktop-setup">
+          <div className="desktop-monitor">
+            <div className="desktop-monitor-body">
+              <div
+                className="screen-wallpaper"
+                style={{ backgroundImage: `url("${projectImage}")` }}
+                aria-label={`${displayTitle} preview`}
+              />
+              <div className="screen-overlay">
+                <h3>{displayTitle}</h3>
+                <p>{project.subtitle || "Project Preview"}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="desktop-stand" />
+
+          <div className="desktop-desk">
+            <div className="desktop-keyboard" />
+            <div className="desktop-mouse" />
+          </div>
+        </div>
+
+        <div className="project-meta">
+          <h4 className="font-heading text-lg font-semibold mb-2">{displayTitle}</h4>
+          <p className="project-description font-body text-muted-foreground text-sm md:text-base leading-relaxed mb-5">
+            {project.description}
+          </p>
+
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-5">
+              {tags.map((tag) => (
+                <span key={tag} className="text-xs px-2.5 py-1 rounded-full border border-border text-muted-foreground">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          <div className="flex gap-3">
+            {project.github && (
+              <a href={project.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Github size={16} /> Code
+              </a>
+            )}
+            {project.link && (
+              <a href={project.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
+                <ExternalLink size={16} /> Live
+              </a>
+            )}
+          </div>
+        </div>
+      </article>
+    );
+  };
 
   return (
     <section id="projects" className="py-32 relative overflow-hidden">
@@ -80,86 +227,82 @@ const ProjectsSection = () => {
           </h2>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {displayProjects.length > 0
-            ? displayProjects.map((project, i) => (
-                <div
-                  key={project._id || project.title}
-                  className={`group relative rounded-2xl overflow-hidden border border-border hover:border-primary/50 transition-all duration-500 ${
-                    isVisible ? `animate-scale-in stagger-${i + 2}` : "opacity-0"
-                  }`}
-                >
-                  {/* Image or Gradient */}
-                  <div className="h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                    {project.image ? (
-                      <img src={project.image} alt={project.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <h3 className="font-heading text-3xl font-bold text-foreground text-center px-4">{project.title}</h3>
-                    )}
+        <div
+          className="projects-carousel max-w-6xl mx-auto"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          onKeyDown={(e) => {
+            if (slides.length <= 1) return;
+            if (e.key === "ArrowLeft") {
+              e.preventDefault();
+              goPrev();
+            } else if (e.key === "ArrowRight") {
+              e.preventDefault();
+              goNext();
+            }
+          }}
+          role="region"
+          aria-roledescription="carousel"
+          aria-label="Featured projects"
+          tabIndex={0}
+        >
+          {slides.length > 0 && (
+            <>
+              <div className="projects-carousel-row">
+                {slides.length > 1 && (
+                  <button
+                    type="button"
+                    className="projects-carousel-arrow"
+                    onClick={goPrev}
+                    aria-label="Previous project"
+                  >
+                    <ChevronLeft size={28} strokeWidth={2} />
+                  </button>
+                )}
+                <div className="projects-carousel-main">
+                  <div
+                    className="projects-carousel-viewport"
+                    key={slides[currentIndex]?._id || slides[currentIndex]?.title || slides[currentIndex]?.name || currentIndex}
+                  >
+                    {renderProjectCard(slides[currentIndex] as any, currentIndex)}
                   </div>
-
-                  <div className="p-6 bg-card">
-                    <h4 className="font-heading text-lg font-semibold mb-2">{project.title}</h4>
-                    <p className="font-body text-muted-foreground text-sm leading-relaxed mb-5">
-                      {project.description}
-                    </p>
-                    <div className="flex flex-wrap gap-2 mb-5">
-                      {project.skills?.map((tech) => (
-                        <span key={tech} className="text-xs px-2.5 py-1 rounded-full border border-border text-muted-foreground">
-                          {tech}
-                        </span>
+                  {slides.length > 1 && (
+                    <div className="projects-carousel-dots" role="tablist" aria-label="Project slides">
+                      {slides.map((p, i) => (
+                        <button
+                          key={p._id || `${p.title || p.name}-${i}`}
+                          type="button"
+                          role="tab"
+                          aria-selected={i === currentIndex}
+                          aria-label={`Show project ${i + 1}: ${p.title || p.name || "Project"}`}
+                          className={`projects-carousel-dot ${i === currentIndex ? "active" : ""}`}
+                          onClick={() => setCurrentIndex(i)}
+                        />
                       ))}
                     </div>
-                    <div className="flex gap-3">
-                      {project.github && (
-                        <a href={project.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
-                          <Github size={16} /> Code
-                        </a>
-                      )}
-                      {project.link && (
-                        <a href={project.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
-                          <ExternalLink size={16} /> Live
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))
-            : defaultProjects.map((project, i) => (
-                <div
-                  key={project.title}
-                  className={`group relative rounded-2xl overflow-hidden border border-border hover:border-primary/50 transition-all duration-500 ${
-                    isVisible ? `animate-scale-in stagger-${i + 2}` : "opacity-0"
-                  }`}
-                >
-                  {/* Gradient top */}
-                  <div className={`h-48 bg-gradient-to-br ${project.gradient} flex items-center justify-center`}>
-                    <h3 className="font-heading text-3xl font-bold text-foreground">{project.title}</h3>
-                  </div>
-
-                  <div className="p-6 bg-card">
-                    <p className="text-primary font-body text-sm mb-2">{project.subtitle}</p>
-                    <p className="font-body text-muted-foreground text-sm leading-relaxed mb-5">
-                      {project.description}
+                  )}
+                  {slides.length > 1 && (
+                    <p className="text-center text-xs text-muted-foreground mt-3">
+                      {isPaused ? "Paused — move cursor away to resume" : "Auto-rotating — hover to pause"}
                     </p>
-                    <div className="flex flex-wrap gap-2 mb-5">
-                      {project.tech.map((t) => (
-                        <span key={t} className="text-xs px-2.5 py-1 rounded-full border border-border text-muted-foreground">
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="flex gap-3">
-                      <a href="#" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
-                        <Github size={16} /> Code
-                      </a>
-                      <a href="#" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
-                        <ExternalLink size={16} /> Live
-                      </a>
-                    </div>
-                  </div>
+                  )}
                 </div>
-              ))}
+                {slides.length > 1 && (
+                  <button
+                    type="button"
+                    className="projects-carousel-arrow"
+                    onClick={goNext}
+                    aria-label="Next project"
+                  >
+                    <ChevronRight size={28} strokeWidth={2} />
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+          {!loading && slides.length === 0 && (
+            <p className="text-center text-muted-foreground">No projects to show yet.</p>
+          )}
         </div>
       </div>
     </section>

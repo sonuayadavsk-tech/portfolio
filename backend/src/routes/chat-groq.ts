@@ -2,59 +2,19 @@ import express, { Request, Response } from "express";
 import Portfolio from "../models/Portfolio.js";
 import { Groq } from "groq-sdk";
 import { fetchGitHubRepoData, isValidGitHubUrl } from "../utils/github.js";
+import { groqChatTools, executeGroqChatTool } from "../mcp/tools.js";
+
+const CHAT_MODEL = "llama-3.3-70b-versatile";
+const MAX_TOOL_ROUNDS = 5;
+const MAX_TOOL_OUTPUT_CHARS = 48000;
 
 const router = express.Router();
 const GITHUB_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
-function normalizeText(input: string): string {
-  return input.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
-}
-
-function parseGitHubOwnerRepo(url: string): { owner: string; repo: string } | null {
-  const match = url.match(/github\.com\/([^\/]+)\/([^\/\.\?]+)(\.git)?/i);
-  if (!match) return null;
-  return { owner: match[1].toLowerCase(), repo: match[2].toLowerCase() };
-}
-
-function findMostRelevantProject(portfolio: any, userMessage: string): any | null {
-  const projects = portfolio?.projects || [];
-  if (!projects.length) return null;
-
-  const normalizedMessage = normalizeText(userMessage);
-  let bestMatch: any = null;
-  let bestScore = 0;
-
-  for (const project of projects) {
-    let score = 0;
-    const projectName = normalizeText(project.name || "");
-    const description = normalizeText(project.description || "");
-    const githubUrl = (project.github || "").toLowerCase();
-    const parsedRepo = githubUrl ? parseGitHubOwnerRepo(githubUrl) : null;
-
-    if (projectName && normalizedMessage.includes(projectName)) score += 10;
-    if (parsedRepo?.repo && normalizedMessage.includes(parsedRepo.repo)) score += 8;
-    if (parsedRepo?.owner && normalizedMessage.includes(parsedRepo.owner)) score += 4;
-    if (githubUrl && userMessage.toLowerCase().includes(githubUrl)) score += 12;
-
-    for (const keyword of projectName.split(" ").filter((k: string) => k.length > 2)) {
-      if (normalizedMessage.includes(keyword)) score += 1;
-    }
-    for (const keyword of description.split(" ").filter((k: string) => k.length > 4).slice(0, 8)) {
-      if (normalizedMessage.includes(keyword)) score += 0.5;
-    }
-
-    if (score > bestScore) {
-      bestScore = score;
-      bestMatch = project;
-    }
-  }
-
-  return bestScore >= 3 ? bestMatch : null;
-}
-
-async function ensureProjectGitHubContext(project: any): Promise<any> {
+/** Fetches/refreshes GitHub metadata for one project when missing or stale. Returns true if DB should be saved. */
+async function ensureProjectGitHubContext(project: any): Promise<boolean> {
   if (!project?.github || !isValidGitHubUrl(project.github)) {
-    return project;
+    return false;
   }
 
   const isFresh =
@@ -62,61 +22,92 @@ async function ensureProjectGitHubContext(project: any): Promise<any> {
     Date.now() - new Date(project.githubData.fetchedAt).getTime() < GITHUB_CACHE_TTL_MS;
 
   if (isFresh && project.githubData) {
-    return project;
+    return false;
   }
 
   const githubData = await fetchGitHubRepoData(project.github);
   if (!githubData) {
-    return project;
+    return false;
   }
 
   project.githubData = githubData;
-  return project;
+  return true;
 }
 
-// Helper function to build portfolio context
-async function buildPortfolioContext(): Promise<string> {
+/** Load cached GitHub data from DB for every project with a repo URL; refresh when stale. Persists once if anything changed. */
+async function syncAllProjectsGitHubFromDb(portfolio: any): Promise<void> {
+  const projects = portfolio?.projects || [];
+  let anyUpdated = false;
+
+  for (const proj of projects) {
+    if (await ensureProjectGitHubContext(proj)) {
+      anyUpdated = true;
+    }
+  }
+
+  if (anyUpdated && typeof portfolio.markModified === "function") {
+    portfolio.markModified("projects");
+    await portfolio.save();
+    console.log("💾 Saved refreshed GitHub metadata for one or more projects");
+  }
+}
+
+function formatProjectForContext(proj: any): string {
+  const skills = Array.isArray(proj.skills) ? proj.skills.join(", ") : proj.skills || "";
+  let projectContent = `**${proj.name}**: ${proj.description}\nSkills: ${skills}`;
+
+  if (proj.github) {
+    projectContent += `\nGitHub URL (admin): ${proj.github}`;
+  }
+  if (proj.link) {
+    projectContent += `\nLive / hosted: ${proj.link}`;
+  }
+
+  if (proj.githubData) {
+    const ghData = proj.githubData;
+    projectContent += `\n\n**GitHub (from DB / API)**`;
+    projectContent += `\nRepository: ${ghData.url || `${ghData.owner}/${ghData.repo}`}`;
+    projectContent += `\nStars: ⭐ ${ghData.stars ?? "N/A"}`;
+    projectContent += `\nLanguage: ${ghData.language || "N/A"}`;
+    projectContent += `\nTopics: ${(ghData.topics || []).join(", ") || "N/A"}`;
+    projectContent += `\nTechnologies: ${(ghData.technologies || []).join(", ") || "N/A"}`;
+
+    if (ghData.packageJson) {
+      projectContent += `\n\nProject Details (package.json):`;
+      projectContent += `\n- Name: ${ghData.packageJson.name}`;
+      projectContent += `\n- Version: ${ghData.packageJson.version}`;
+      if (ghData.packageJson.description) {
+        projectContent += `\n- Description: ${ghData.packageJson.description}`;
+      }
+
+      const deps = Object.keys(ghData.packageJson.dependencies || {});
+      if (deps.length > 0) {
+        projectContent += `\n- Key Dependencies: ${deps.slice(0, 8).join(", ")}${deps.length > 8 ? ", ..." : ""}`;
+      }
+    }
+
+    if (ghData.readme) {
+      projectContent += `\n\nREADME excerpt:\n${ghData.readme.substring(0, 500)}...`;
+    }
+  } else if (proj.github && isValidGitHubUrl(proj.github)) {
+    projectContent += `\n(GitHub metadata not yet cached — repo may be private or API rate-limited.)`;
+  }
+
+  return projectContent;
+}
+
+/** Build Groq system context from an already-loaded Mongoose portfolio document (same object we synced GitHub on). */
+function buildPortfolioContextFromDoc(portfolio: any): string {
   try {
-    const portfolio = await Portfolio.findOne();
     if (!portfolio) return "";
 
-    const projectsInfo = portfolio.projects
-      .map((proj: any) => {
-        let projectContent = `**${proj.name}**: ${proj.description}\nSkills: ${proj.skills || ""}`;
-        
-        // Add GitHub data if available
-        if (proj.githubData) {
-          const ghData = proj.githubData;
-          projectContent += `\n\n**GitHub Repository**: ${ghData.url}`;
-          projectContent += `\nRepository: ${ghData.owner}/${ghData.repo}`;
-          projectContent += `\nStars: ⭐ ${ghData.stars}`;
-          projectContent += `\nLanguage: ${ghData.language}`;
-          projectContent += `\nTopics: ${ghData.topics.join(", ") || "N/A"}`;
-          projectContent += `\nTechnologies: ${ghData.technologies.join(", ") || "N/A"}`;
-          
-          if (ghData.packageJson) {
-            projectContent += `\n\nProject Details:`;
-            projectContent += `\n- Name: ${ghData.packageJson.name}`;
-            projectContent += `\n- Version: ${ghData.packageJson.version}`;
-            if (ghData.packageJson.description) {
-              projectContent += `\n- Description: ${ghData.packageJson.description}`;
-            }
-            
-            const deps = Object.keys(ghData.packageJson.dependencies || {});
-            if (deps.length > 0) {
-              projectContent += `\n- Key Dependencies: ${deps.slice(0, 8).join(", ")}${deps.length > 8 ? ", ..." : ""}`;
-            }
-          }
-          
-          if (ghData.readme) {
-            // Include first 500 chars of README
-            projectContent += `\n\nProject Overview:\n${ghData.readme.substring(0, 500)}...`;
-          }
-        }
-        
-        return projectContent;
-      })
-      .join("\n\n---\n\n");
+    const projectsInfo = (portfolio.projects || []).map(formatProjectForContext).join("\n\n---\n\n");
+
+    const skillLines = (portfolio.skillCategories || []).map((cat: any) => {
+      const title = cat.title || cat.name || "Category";
+      const sk = Array.isArray(cat.skills) ? cat.skills.join(", ") : cat.skills || "";
+      return `**${title}**: ${sk}`;
+    });
 
     return `
 # Portfolio Information
@@ -128,12 +119,10 @@ ${portfolio.bio}
 ${portfolio.title} - ${portfolio.tagline}
 
 ## Skills by Category
-${(portfolio.skillCategories || [])
-  .map((cat: any) => `**${cat.name}**: ${cat.skills || ""}`)
-  .join("\n")}
+${skillLines.join("\n")}
 
 ## Professional Experience
-${portfolio.experience
+${(portfolio.experience || [])
   .map(
     (exp: any) =>
       `**${exp.role}** at ${exp.company} (${exp.duration})\n${exp.description}`
@@ -144,11 +133,11 @@ ${portfolio.experience
 ${projectsInfo}
 
 ## Contact Information
-- Email: ${portfolio.contact.email}
-- Phone: ${portfolio.contact.phone}
-- Location: ${portfolio.contact.location}
-- LinkedIn: ${portfolio.contact.linkedin}
-- GitHub: ${portfolio.contact.github}
+- Email: ${portfolio.contact?.email}
+- Phone: ${portfolio.contact?.phone}
+- Location: ${portfolio.contact?.location}
+- LinkedIn: ${portfolio.contact?.linkedin}
+- GitHub: ${portfolio.contact?.github}
 
 ## Statistics
 ${(portfolio.stats || []).map((s: any) => `- ${s.label}: ${s.value}`).join("\n")}
@@ -198,22 +187,16 @@ router.post("/", async (req: Request, res: Response) => {
       });
     }
 
-    // If user asks about a specific project, ensure its GitHub context is available/up-to-date
-    const focusedProject = findMostRelevantProject(portfolio, message);
-    if (focusedProject) {
-      const enrichedProject = await ensureProjectGitHubContext(focusedProject);
-      if (enrichedProject?.githubData) {
-        await portfolio.save();
-      }
-    }
+    // Refresh stale/missing GitHub metadata for all projects (from DB + GitHub API), then answer from that data
+    await syncAllProjectsGitHubFromDb(portfolio);
 
-    // Build context with portfolio data
-    const portfolioContext = await buildPortfolioContext();
+    const portfolioContext = buildPortfolioContextFromDoc(portfolio);
 
     // System prompt with comprehensive context
     const systemPrompt = `You are an expert portfolio assistant for Sonu, a full-stack developer specializing in MERN (MongoDB, Express, React, Node.js) and Java development.
 
-You have access to Sonu's complete portfolio information:
+You have access to Sonu's complete portfolio information (stored in MongoDB). Project GitHub details (stars, language, README excerpt, dependencies) are loaded from the database and refreshed from the GitHub API when stale.
+
 ${portfolioContext}
 
 ## Your Responsibilities:
@@ -241,9 +224,11 @@ ${portfolioContext}
 - If asked about something not in portfolio, be honest but try to relate to what is known
 
 ## Project Question Rule:
-- If user asks about a specific project, prioritize details from that project's GitHub context (repo description, technologies, dependencies, README summary, and repo metadata) if available.`;
+- If user asks about a specific project, prioritize details from that project's GitHub context (repo description, technologies, dependencies, README summary, and repo metadata) if available.
 
-    // Call Groq API with context
+## GitHub tools (MCP-style, portfolio repos only)
+You can call tools to browse and read **source code** from GitHub repositories that are **already linked** to portfolio projects (admin-configured). Use \`list_portfolio_repo_files\` to explore folders, then \`read_portfolio_repo_file\` to read a file. Pass \`project_name\` matching a portfolio project. Private repos need \`GITHUB_TOKEN\` on the server. Do not invent file paths — list first when unsure.`;
+
     if (!process.env.GROQ_API_KEY) {
       console.error("❌ GROQ_API_KEY not found in environment");
       return res.status(500).json({
@@ -252,39 +237,92 @@ ${portfolioContext}
       });
     }
 
-    console.log("✅ GROQ_API_KEY found:", process.env.GROQ_API_KEY?.substring(0, 10) + "...");
-    
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-    const completion = await groq.chat.completions.create({
-      messages: [
-        {
-          role: "system",
-          content: systemPrompt,
-        },
-        {
-          role: "user",
-          content: message,
-        },
-      ],
-      model: "llama-3.3-70b-versatile",
+    const messages: any[] = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: message },
+    ];
+
+    let usedTools = false;
+    let rounds = 0;
+
+    while (rounds < MAX_TOOL_ROUNDS) {
+      rounds += 1;
+      const completion = await groq.chat.completions.create({
+        model: CHAT_MODEL,
+        messages,
+        tools: groqChatTools as any,
+        temperature: 0.7,
+        max_tokens: 1024,
+        top_p: 1,
+        stream: false,
+      } as any);
+
+      const choice = completion.choices[0]?.message;
+      if (!choice) {
+        break;
+      }
+
+      const toolCalls = choice.tool_calls;
+      if (!toolCalls?.length) {
+        const text = choice.content?.trim() || "I couldn't process your request. Please try again.";
+        return res.json({
+          message: text,
+          source: usedTools ? "groq-with-portfolio-github-tools" : "groq-with-portfolio-context",
+          model: CHAT_MODEL,
+          hasContext: true,
+          portfolioDataIncluded: true,
+          usedGithubTools: usedTools,
+        });
+      }
+
+      usedTools = true;
+      messages.push({
+        role: "assistant",
+        content: choice.content || null,
+        tool_calls: toolCalls,
+      });
+
+      for (const tc of toolCalls) {
+        const fn = tc.function;
+        const name = fn?.name || "";
+        let args: Record<string, unknown> = {};
+        try {
+          args = JSON.parse(fn?.arguments || "{}") as Record<string, unknown>;
+        } catch {
+          args = {};
+        }
+        let out = await executeGroqChatTool(name, args as Record<string, any>, portfolio);
+        if (out.length > MAX_TOOL_OUTPUT_CHARS) {
+          out = out.slice(0, MAX_TOOL_OUTPUT_CHARS) + "\n...[truncated for length]";
+        }
+        messages.push({
+          role: "tool",
+          tool_call_id: tc.id,
+          content: out,
+        });
+      }
+    }
+
+    const finalCompletion = await groq.chat.completions.create({
+      model: CHAT_MODEL,
+      messages,
       temperature: 0.7,
       max_tokens: 1024,
-      top_p: 1,
-      stream: false,
-      stop: null,
-    });
+    } as any);
 
     const assistantMessage =
-      completion.choices[0]?.message?.content ||
+      finalCompletion.choices[0]?.message?.content?.trim() ||
       "I couldn't process your request. Please try again.";
 
     res.json({
       message: assistantMessage,
-      source: "groq-with-portfolio-context",
-      model: "llama-3.3-70b-versatile",
+      source: "groq-with-portfolio-github-tools",
+      model: CHAT_MODEL,
       hasContext: true,
       portfolioDataIncluded: true,
+      usedGithubTools: usedTools,
     });
   } catch (error: any) {
     console.error("Chat error:", error);

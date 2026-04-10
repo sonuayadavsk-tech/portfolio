@@ -21,7 +21,7 @@ interface GitHubRepoData {
 }
 
 // Extract owner and repo from GitHub URL
-function parseGitHubUrl(url: string): { owner: string; repo: string } | null {
+export function parseGitHubUrl(url: string): { owner: string; repo: string } | null {
   try {
     // Handle multiple GitHub URL formats
     const patterns = [

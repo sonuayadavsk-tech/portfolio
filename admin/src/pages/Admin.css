@@ -50,6 +50,12 @@
   box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
 }
 
+.form-group textarea.project-description-field {
+  min-height: 180px;
+  resize: vertical;
+  line-height: 1.55;
+}
+
 .form-group button {
   background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
   color: #000;
@@ -431,6 +437,168 @@
   background: rgba(255, 170, 0, 0.1);
   border-radius: 6px;
   margin-bottom: 16px;
+}
+
+.admin-hint {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: -8px 0 20px;
+}
+
+.admin-label {
+  display: block;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  margin-top: 12px;
+}
+
+.admin-label:first-of-type {
+  margin-top: 0;
+}
+
+.admin-image-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.admin-file-input {
+  max-width: 100%;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+}
+
+.admin-thumb {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 255, 136, 0.4);
+}
+
+.admin-inline-status {
+  color: #ffaa00;
+  font-size: 13px;
+}
+
+.project-card-managed {
+  flex-direction: column;
+  align-items: stretch;
+  padding: 22px 24px;
+  min-height: 140px;
+}
+
+.project-card-managed .project-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.project-card-row {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.project-list-thumb {
+  width: 112px;
+  height: 112px;
+  object-fit: cover;
+  border-radius: 10px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.project-desc-preview {
+  margin-top: 6px;
+  line-height: 1.55;
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: min(42vh, 420px);
+  overflow-y: auto;
+  padding-right: 8px;
+  scrollbar-gutter: stable;
+}
+
+.project-desc-preview::-webkit-scrollbar {
+  width: 8px;
+}
+
+.project-desc-preview::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 136, 0.35);
+  border-radius: 4px;
+}
+
+.project-links {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.project-links a {
+  color: #64a8ff;
+  font-size: 13px;
+}
+
+.project-edit-form {
+  width: 100%;
+}
+
+.project-edit-form .admin-label {
+  margin-top: 10px;
+}
+
+.project-edit-form input,
+.project-edit-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.project-edit-form textarea[name="description"] {
+  min-height: 200px;
+  resize: vertical;
+}
+
+.admin-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.admin-btn-row .btn,
+.admin-btn-row .btn-primary,
+.admin-btn-row .btn-secondary {
+  width: auto;
+  flex: 1;
+  min-width: 120px;
+}
+
+.project-card-actions {
+  width: 100%;
+  justify-content: flex-end;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.btn-sm {
+  padding: 8px 14px;
+  font-size: 13px;
 }
 
 @media (max-width: 768px) {
