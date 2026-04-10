@@ -88,7 +88,7 @@ const SkillsSection = () => {
             {displaySkills.map((skill, i) => (
               <span
                 key={skill}
-                className={`text-sm font-body px-4 py-2 rounded-full bg-secondary text-secondary-foreground border border-primary/20 hover:border-primary/50 transition-all ${isVisible ? `animate-fade-up stagger-${(i % 10) + 2}` : "opacity-0"
+                className={`text-sm font-body px-4 py-2 rounded-full bg-white/5 backdrop-blur-md text-foreground border border-white/10 hover:border-primary/50 transition-all ${isVisible ? `animate-fade-up stagger-${(i % 10) + 2}` : "opacity-0"
                   }`}
               >
                 {skill}
@@ -101,7 +101,7 @@ const SkillsSection = () => {
             {skillCategories.map((cat, i) => (
               <div
                 key={cat.title}
-                className={`group p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-500 hover:glow-primary ${isVisible ? `animate-fade-up stagger-${i + 2}` : "opacity-0"
+                className={`group p-6 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 hover:border-primary/50 transition-all duration-500 hover:glow-primary ${isVisible ? `animate-fade-up stagger-${i + 2}` : "opacity-0"
                   }`}
               >
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors">
@@ -112,7 +112,7 @@ const SkillsSection = () => {
                   {cat.skills.map((skill) => (
                     <span
                       key={skill}
-                      className="text-xs font-body px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground"
+                      className="text-xs font-body px-3 py-1.5 rounded-full bg-white/10 text-foreground border border-white/5"
                     >
                       {skill}
                     </span>
