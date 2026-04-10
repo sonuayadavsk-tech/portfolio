@@ -27,6 +27,10 @@ const AdminExperience: React.FC = () => {
 
   const [skillsStr, setSkillsStr] = useState("");
 
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editDraft, setEditDraft] = useState<Experience | null>(null);
+  const [editSkillsStr, setEditSkillsStr] = useState("");
+
   useEffect(() => {
     fetchExperience();
   }, []);
@@ -72,6 +76,61 @@ const AdminExperience: React.FC = () => {
     }
   };
 
+  const startEdit = (index: number) => {
+    const exp = experiences[index];
+    setEditingIndex(index);
+    setEditDraft({ ...exp });
+    setEditSkillsStr((exp.skills || []).join(", "));
+    setMessage("");
+  };
+
+  const cancelEdit = () => {
+    setEditingIndex(null);
+    setEditDraft(null);
+    setEditSkillsStr("");
+  };
+
+  const saveEdit = async () => {
+    if (editingIndex === null || !editDraft) return;
+
+    const skills = editSkillsStr.split(",").map(s => s.trim()).filter(Boolean);
+    const updatedExperiences = [...experiences];
+    updatedExperiences[editingIndex] = { ...editDraft, skills };
+
+    try {
+      setLoading(true);
+      await portfolioAPI.updateSection("experience", { experience: updatedExperiences });
+      setMessage("✅ Experience updated successfully!");
+      cancelEdit();
+      fetchExperience();
+    } catch (error) {
+      setMessage("❌ Failed to update experience");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMoveExperience = async (index: number, direction: 'up' | 'down') => {
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= experiences.length) return;
+
+    const updatedExperiences = [...experiences];
+    const temp = updatedExperiences[index];
+    updatedExperiences[index] = updatedExperiences[newIndex];
+    updatedExperiences[newIndex] = temp;
+
+    try {
+      setLoading(true);
+      await portfolioAPI.updateSection("experience", { experience: updatedExperiences });
+      setMessage(`✅ Experience moved ${direction}!`);
+      fetchExperience();
+    } catch (error) {
+      setMessage("❌ Failed to reorder experience");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteExperience = async (index: number) => {
     try {
       setLoading(true);
@@ -86,23 +145,35 @@ const AdminExperience: React.FC = () => {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, mode: 'new' | 'edit' = 'new') => {
     const { name, value } = e.target;
-    setNewExperience({ ...newExperience, [name]: value });
+    if (mode === 'new') {
+      setNewExperience({ ...newExperience, [name]: value });
+    } else if (editDraft) {
+      setEditDraft({ ...editDraft, [name]: value });
+    }
   };
 
-  const handleSkillsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSkillsStr(e.target.value);
+  const handleSkillsChange = (e: React.ChangeEvent<HTMLInputElement>, mode: 'new' | 'edit' = 'new') => {
+    if (mode === 'new') {
+      setSkillsStr(e.target.value);
+    } else {
+      setEditSkillsStr(e.target.value);
+    }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, mode: 'new' | 'edit' = 'new') => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     try {
       setLoading(true);
       setMessage("⏳ Uploading image...");
       const res = await uploadAPI.uploadProgressCardImage(files[0]);
-      setNewExperience({ ...newExperience, progressCardImage: res.data.imageUrl });
+      if (mode === 'new') {
+        setNewExperience({ ...newExperience, progressCardImage: res.data.imageUrl });
+      } else if (editDraft) {
+        setEditDraft({ ...editDraft, progressCardImage: res.data.imageUrl });
+      }
       setMessage("✅ Image uploaded!");
     } catch (error) {
       setMessage("❌ Image upload failed");
@@ -171,21 +242,96 @@ const AdminExperience: React.FC = () => {
         ) : (
           experiences.map((exp, index) => (
             <div key={index} className="experience-card">
-              <div className="experience-info">
-                <h4>{exp.role}</h4>
-                <p className="company">{exp.company}</p>
-                <p>{exp.description}</p>
-                <p className="duration">📅 {exp.duration}</p>
-                <p className="skills">Skills: {exp.skills.join(", ")}</p>
-                {exp.progressCardImage && <p className="image-url mt-2 font-semibold">🖼️ Progress Card Linked</p>}
-              </div>
-              <button
-                onClick={() => handleDeleteExperience(index)}
-                disabled={loading}
-                className="delete-btn mt-4"
-              >
-                🗑️ Delete
-              </button>
+              {editingIndex === index && editDraft ? (
+                <div className="edit-form-inline">
+                  <h4>Edit Experience</h4>
+                  <input
+                    type="text"
+                    name="company"
+                    placeholder="Company Name"
+                    value={editDraft.company}
+                    onChange={(e) => handleInputChange(e, 'edit')}
+                  />
+                  <input
+                    type="text"
+                    name="role"
+                    placeholder="Job Role"
+                    value={editDraft.role}
+                    onChange={(e) => handleInputChange(e, 'edit')}
+                  />
+                  <textarea
+                    name="description"
+                    placeholder="Job Description"
+                    value={editDraft.description}
+                    onChange={(e) => handleInputChange(e, 'edit')}
+                  />
+                  <input
+                    type="text"
+                    name="duration"
+                    placeholder="Duration"
+                    value={editDraft.duration}
+                    onChange={(e) => handleInputChange(e, 'edit')}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Skills (comma-separated)"
+                    value={editSkillsStr}
+                    onChange={(e) => handleSkillsChange(e, 'edit')}
+                  />
+                  <div className="progress-card-upload mt-2 mb-2">
+                    <label className="text-xs">Update Image (Optional)</label>
+                    <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'edit')} />
+                  </div>
+                  <div className="admin-btn-row mt-4">
+                    <button onClick={saveEdit} className="btn-primary">Save Changes</button>
+                    <button onClick={cancelEdit} className="btn-secondary">Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="experience-info">
+                    <h4>{exp.role}</h4>
+                    <p className="company">{exp.company}</p>
+                    <p>{exp.description}</p>
+                    <p className="duration">📅 {exp.duration}</p>
+                    <p className="skills">Skills: {exp.skills.join(", ")}</p>
+                    {exp.progressCardImage && <p className="image-url mt-2 font-semibold">🖼️ Progress Card Linked</p>}
+                  </div>
+                  <div className="admin-btn-row flex gap-2 mt-4">
+                    <div className="reorder-btns flex gap-1">
+                      <button
+                        onClick={() => handleMoveExperience(index, 'up')}
+                        disabled={loading || index === 0}
+                        className="btn-icon"
+                        title="Move Up"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        onClick={() => handleMoveExperience(index, 'down')}
+                        disabled={loading || index === experiences.length - 1}
+                        className="btn-icon"
+                        title="Move Down"
+                      >
+                        ↓
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => startEdit(index)}
+                      className="btn-sm"
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteExperience(index)}
+                      disabled={loading}
+                      className="delete-btn"
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           ))
         )}
