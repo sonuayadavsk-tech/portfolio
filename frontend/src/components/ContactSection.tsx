@@ -8,10 +8,25 @@ const ContactSection = () => {
     <section id="contact" className="py-32 relative overflow-hidden">
       {/* Video Background */}
       <div className="absolute inset-0 z-0">
-        <video autoPlay muted loop playsInline className="w-full h-full object-cover opacity-20">
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 h-full w-full object-cover object-bottom scale-[1.12] opacity-100 [filter:blur(5px)_saturate(1.12)_contrast(1.05)]"
+        >
           <source src="https://res.cloudinary.com/dla0brxmi/video/upload/v1775728807/127487-738466726_kmdj9v.mp4" type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-background/85" />
+        {/* Slightly darker / black-tinted over video for contrast */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: [
+              "linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.06) 45%, rgba(0,0,0,0.14) 100%)",
+              "linear-gradient(to bottom, hsl(var(--background) / 0.94) 0%, hsl(var(--background) / 0.64) 34%, hsl(var(--background) / 0.4) 58%, hsl(var(--background) / 0.26) 100%)",
+            ].join(", "),
+          }}
+        />
       </div>
       <div ref={ref} className="relative z-10 container mx-auto px-6 max-w-4xl">
         <div className="text-center mb-16">
@@ -32,13 +47,15 @@ const ContactSection = () => {
             <a
               key={item.label}
               href={item.href}
-              className="group p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 text-center hover:glow-primary"
+              className="group p-6 rounded-2xl text-center transition-all duration-300
+                border border-white/[0.14] bg-white/[0.06] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08),0_10px_40px_rgba(0,0,0,0.22)]
+                backdrop-blur-xl hover:border-primary/45 hover:bg-white/[0.11] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_14px_48px_rgba(0,0,0,0.28)]"
             >
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] backdrop-blur-sm transition-colors group-hover:border-primary/30 group-hover:bg-primary/15">
                 <item.icon size={20} className="text-primary" />
               </div>
-              <p className="font-heading text-sm font-semibold mb-1">{item.label}</p>
-              <p className="font-body text-xs text-muted-foreground">{item.value}</p>
+              <p className="font-heading mb-1 text-sm font-semibold text-foreground/95">{item.label}</p>
+              <p className="font-body text-xs text-white/65">{item.value}</p>
             </a>
           ))}
         </div>
