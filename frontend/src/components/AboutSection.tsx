@@ -68,7 +68,7 @@ const AboutSection = () => {
           muted
           loop
           playsInline
-          className="w-full h-full object-cover opacity-80"
+          className="w-full h-full object-cover object-center md:object-right opacity-80"
         >
           <source
             src="https://res.cloudinary.com/dentbtrzb/video/upload/v1775814047/120409-720891985_medium_vs7bkv.mp4"

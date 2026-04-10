@@ -55,21 +55,22 @@ const SkillsSection = () => {
 
   // Use dynamic skills if available, otherwise use default categories
   const displaySkills = skills.length > 0 ? skills : [];
-  const skillCategories = displaySkills.length > 0 
+  const skillCategories = displaySkills.length > 0
     ? defaultSkillCategories.map(cat => ({
-        ...cat,
-        skills: displaySkills
-      }))
+      ...cat,
+      skills: displaySkills
+    }))
     : defaultSkillCategories;
 
   return (
     <section id="skills" className="py-32 relative overflow-hidden">
       {/* Video Background */}
       <div className="absolute inset-0 z-0">
-        <video autoPlay muted loop playsInline className="w-full h-full object-cover opacity-20">
-          <source src="https://res.cloudinary.com/dla0brxmi/video/upload/v1775728279/85590-590014592_medium_f3qxlv.mp4" type="video/mp4" />
+        <video autoPlay muted loop playsInline className="w-full h-full object-cover opacity-40">
+          <source src="https://res.cloudinary.com/dentbtrzb/video/upload/v1775814872/201779-916357991_q6xqmf.mp4" type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-background/85" />
+        {/* Cinematic blend: Subdued blackish-red top gradient to match the flow */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1a0505]/30 via-background/85 to-background/90" />
       </div>
       <div ref={ref} className="relative z-10 container mx-auto px-6">
         <div className="text-center mb-16">
@@ -87,9 +88,8 @@ const SkillsSection = () => {
             {displaySkills.map((skill, i) => (
               <span
                 key={skill}
-                className={`text-sm font-body px-4 py-2 rounded-full bg-secondary text-secondary-foreground border border-primary/20 hover:border-primary/50 transition-all ${
-                  isVisible ? `animate-fade-up stagger-${(i % 10) + 2}` : "opacity-0"
-                }`}
+                className={`text-sm font-body px-4 py-2 rounded-full bg-secondary text-secondary-foreground border border-primary/20 hover:border-primary/50 transition-all ${isVisible ? `animate-fade-up stagger-${(i % 10) + 2}` : "opacity-0"
+                  }`}
               >
                 {skill}
               </span>
@@ -101,9 +101,8 @@ const SkillsSection = () => {
             {skillCategories.map((cat, i) => (
               <div
                 key={cat.title}
-                className={`group p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-500 hover:glow-primary ${
-                  isVisible ? `animate-fade-up stagger-${i + 2}` : "opacity-0"
-                }`}
+                className={`group p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-500 hover:glow-primary ${isVisible ? `animate-fade-up stagger-${i + 2}` : "opacity-0"
+                  }`}
               >
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors">
                   <cat.icon size={24} className="text-primary" />
