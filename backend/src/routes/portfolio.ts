@@ -117,6 +117,7 @@ router.put("/:section", async (req: Request, res: Response) => {
     } else if (section === "experience") {
       console.log("📥 Updating experience. Data received:", JSON.stringify(req.body.experience, null, 2));
       portfolio.experience = req.body.experience;
+      portfolio.markModified("experience");
     } else if (section === "achievements") {
       portfolio.achievements = req.body.achievements;
     } else if (section === "skills") {

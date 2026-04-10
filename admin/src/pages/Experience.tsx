@@ -239,7 +239,10 @@ const AdminExperience: React.FC = () => {
           <label className="file-input-label">Upload Progress Card (Optional)</label>
           <input type="file" accept="image/*" onChange={handleImageUpload} disabled={loading} />
           {newExperience.progressCardImage && (
-            <p className="image-url text-xs mt-1 text-green-500">Image successfully uploaded and attached.</p>
+            <div className="mt-2">
+              <p className="image-url text-xs text-green-500 mb-2">✅ Image uploaded!</p>
+              <img src={newExperience.progressCardImage} alt="Preview" className="w-24 h-24 object-cover rounded border border-border" />
+            </div>
           )}
         </div>
         <button onClick={handleAddExperience} disabled={loading}>
@@ -300,6 +303,12 @@ const AdminExperience: React.FC = () => {
                   <div className="progress-card-upload mt-2 mb-2">
                     <label className="text-xs">Update Image (Optional)</label>
                     <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'edit')} />
+                    {editDraft.progressCardImage && (
+                      <div className="mt-2">
+                        <img src={editDraft.progressCardImage} alt="Edit Preview" className="w-20 h-20 object-cover rounded border border-border" />
+                        <p className="text-[10px] text-muted-foreground mt-1">Current/New Image</p>
+                      </div>
+                    )}
                   </div>
                   <div className="admin-btn-row mt-4">
                     <button onClick={saveEdit} className="btn-primary">Save Changes</button>
@@ -314,7 +323,13 @@ const AdminExperience: React.FC = () => {
                     <p>{exp.description}</p>
                     <p className="duration">📅 {exp.duration}</p>
                     <p className="skills">Skills: {exp.skills.join(", ")}</p>
-                    {exp.progressCardImage && <p className="image-url mt-2 font-semibold">🖼️ Progress Card Linked</p>}
+                    {exp.link && <p className="text-xs text-primary mt-1">🔗 {exp.link}</p>}
+                    {exp.progressCardImage && (
+                      <div className="mt-3">
+                        <img src={exp.progressCardImage} alt="Experience" className="w-32 h-20 object-cover rounded border border-border" />
+                        <p className="image-url mt-1 text-[10px] font-semibold">🖼️ Progress Card Linked</p>
+                      </div>
+                    )}
                   </div>
                   <div className="admin-btn-row flex gap-2 mt-4">
                     <div className="reorder-btns flex gap-1">
