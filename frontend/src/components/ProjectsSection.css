@@ -71,6 +71,7 @@
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -115,7 +116,6 @@
 }
 
 .laptop-project-card:hover {
-  transform: translateY(-6px);
   border-color: hsl(var(--primary) / 0.5);
   box-shadow: 0 20px 35px rgba(0, 0, 0, 0.22);
 }
@@ -125,7 +125,6 @@
   width: 100%;
   max-width: min(520px, 100%);
   margin: 0 auto 1.35rem auto;
-  perspective: 1800px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -134,19 +133,17 @@
 .desktop-monitor {
   position: relative;
   width: 94%;
-  border: 3px solid #3f3f46;
+  border: 4px solid #3f3f46;
   border-radius: 12px;
   overflow: hidden;
   background: #101018;
   transform-origin: center center;
-  transform: rotateX(8deg);
   transition: transform 0.4s ease, box-shadow 0.4s ease;
   box-shadow: 0 18px 30px rgba(0, 0, 0, 0.24);
   z-index: 2;
 }
 
 .laptop-project-card:hover .desktop-monitor {
-  transform: rotateX(4deg) translateY(-2px);
   box-shadow: 0 24px 34px rgba(0, 0, 0, 0.3);
 }
 
@@ -236,15 +233,13 @@
 }
 
 .desktop-desk {
-  margin: 28px auto 0 auto;
+  margin: 12px auto 0 auto;
   width: 94%;
   max-width: 414px;
-  border-radius: 16px;
+  border-radius: 12px;
   background: linear-gradient(180deg, #3f3f46, #2a2a33);
-  transform: rotateX(52deg);
-  transform-origin: top center;
   padding: 0.6rem 0.7rem 0.55rem;
-  box-shadow: 0 24px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
   position: relative;
   display: flex;
   flex-direction: row;
@@ -274,27 +269,23 @@
   box-shadow:
     inset 0 2px 0 rgba(255, 255, 255, 0.07),
     inset 0 -3px 8px rgba(0, 0, 0, 0.45),
-          0 1px 0 rgba(255, 255, 255, 0.04);
+    0 1px 0 rgba(255, 255, 255, 0.04);
   background-color: #15161c;
   background-image:
     /* key-well shading */
     linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 42%),
     /* horizontal key rows */
-    repeating-linear-gradient(
-      to bottom,
+    repeating-linear-gradient(to bottom,
       #1f2129 0,
       #1f2129 9px,
       #14151a 9px,
-      #14151a 10px
-    ),
+      #14151a 10px),
     /* vertical key gaps */
-    repeating-linear-gradient(
-      to right,
+    repeating-linear-gradient(to right,
       #25262f 0,
       #25262f 6px,
       #12131a 6px,
-      #12131a 7px
-    );
+      #12131a 7px);
   position: relative;
   z-index: 1;
 }
@@ -358,13 +349,63 @@
   background: hsl(var(--primary) / 0.55);
 }
 
-@media (max-width: 640px) {
-  .desktop-setup {
+@media (max-width: 768px) {
+  .projects-carousel-row {
+    padding: 0;
+    gap: 0;
+  }
+
+  .projects-carousel-main {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .laptop-project-card {
+    padding: 1rem 0;
+    /* Remove horizontal padding for "touch the sides" look */
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    background: transparent;
+    box-shadow: none;
+    border-top: 1px solid hsl(var(--border));
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .project-meta {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    width: 100%;
+    margin: 0;
     max-width: 100%;
   }
 
+  .desktop-setup {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
   .desktop-desk {
-    width: 94%;
-    transform: rotateX(60deg);
+    display: none;
+    /* Hide desk to reduce vertical height on mobile */
+  }
+
+  .desktop-stand {
+    display: none;
+    /* Hide stand as well */
+  }
+}
+
+@media (max-width: 520px) {
+  .projects-carousel-arrow {
+    display: none;
+    /* Rely on dots for navigation on small mobile */
+  }
+
+  .project-description {
+    font-size: 0.88rem;
+    line-height: 1.55;
+    max-height: none;
+    /* Allow more height naturally or scroll if needed */
   }
 }
