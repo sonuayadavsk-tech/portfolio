@@ -9,6 +9,7 @@ interface Experience {
   description?: string;
   skills?: string[];
   progressCardImage?: string;
+  link?: string;
   // Additional fields for compatibility
   title?: string;
   org?: string;
@@ -128,7 +129,19 @@ const ExperienceSection = () => {
                       <h3 className="font-heading text-lg font-semibold">{item.role || item.title}</h3>
                       <span className="text-xs text-primary font-body">{item.duration || item.period}</span>
                     </div>
-                    <p className="text-sm text-muted-foreground font-body mb-3">{item.company || item.org}</p>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm text-muted-foreground font-body">{item.company || item.org}</p>
+                      {item.link && (
+                        <a
+                          href={item.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-primary hover:underline flex items-center gap-1"
+                        >
+                          Visit <BookOpen size={12} />
+                        </a>
+                      )}
+                    </div>
                     {item.description && (
                       <p className="text-sm text-muted-foreground font-body mb-3">{item.description}</p>
                     )}

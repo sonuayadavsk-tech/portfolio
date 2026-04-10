@@ -10,6 +10,7 @@ interface Experience {
   duration: string;
   skills: string[];
   progressCardImage?: string;
+  link?: string;
 }
 
 const AdminExperience: React.FC = () => {
@@ -21,6 +22,7 @@ const AdminExperience: React.FC = () => {
     duration: "",
     skills: [],
     progressCardImage: "",
+    link: "",
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -66,6 +68,7 @@ const AdminExperience: React.FC = () => {
         duration: "",
         skills: [],
         progressCardImage: "",
+        link: "",
       });
       setSkillsStr("");
       fetchExperience();
@@ -213,8 +216,15 @@ const AdminExperience: React.FC = () => {
         <input
           type="text"
           name="duration"
-          placeholder="Duration (e.g., Jan 2023 - Dec 2024)"
+          placeholder="Duration (e.g., Jan 2022 - Present)"
           value={newExperience.duration}
+          onChange={handleInputChange}
+        />
+        <input
+          type="url"
+          name="link"
+          placeholder="Company/Academy Website URL (Optional)"
+          value={newExperience.link || ""}
           onChange={handleInputChange}
         />
         <input
@@ -270,6 +280,13 @@ const AdminExperience: React.FC = () => {
                     name="duration"
                     placeholder="Duration"
                     value={editDraft.duration}
+                    onChange={(e) => handleInputChange(e, 'edit')}
+                  />
+                  <input
+                    type="url"
+                    name="link"
+                    placeholder="Website URL"
+                    value={editDraft.link || ""}
                     onChange={(e) => handleInputChange(e, 'edit')}
                   />
                   <input

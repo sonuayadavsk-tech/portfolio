@@ -141,6 +141,7 @@ const PortfolioSchema = new Schema<IPortfolio>(
         duration: { type: String, required: true },
         skills: [String],
         progressCardImage: String,
+        link: String,
       },
     ],
     contact: {

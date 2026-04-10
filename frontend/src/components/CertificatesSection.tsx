@@ -117,9 +117,19 @@ const CertificatesSection = () => {
                                     <p className="text-xs text-muted-foreground mb-4">📅 {ach.date}</p>
                                 )}
                                 {ach.description && (
-                                    <p className="text-sm text-muted-foreground font-body line-clamp-3">
+                                    <p className="text-sm text-muted-foreground font-body line-clamp-3 mb-4">
                                         {ach.description}
                                     </p>
+                                )}
+                                {ach.link && (
+                                    <a
+                                        href={ach.link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-2 text-sm text-primary hover:underline font-medium mt-auto"
+                                    >
+                                        View Certificate <ExternalLink size={14} />
+                                    </a>
                                 )}
                             </div>
                         </div>
