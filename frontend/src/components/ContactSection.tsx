@@ -1,8 +1,35 @@
+import { useState, useEffect } from "react";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Mail, MapPin, Phone, Send } from "lucide-react";
 
 const ContactSection = () => {
   const { ref, isVisible } = useScrollAnimation(0.1);
+  const [contact, setContact] = useState({
+    email: "Sonuskyadav30@gmail.com",
+    phone: "+91-6363742403",
+    location: "Belagavi, Karnataka",
+  });
+
+  useEffect(() => {
+    fetchContactData();
+  }, []);
+
+  const fetchContactData = async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const response = await fetch(`${apiUrl}/api/portfolio`);
+      const data = await response.json();
+      if (data.contact) {
+        setContact({
+          email: data.contact.email || contact.email,
+          phone: data.contact.phone || contact.phone,
+          location: data.contact.location || contact.location,
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   return (
     <section id="contact" className="py-32 relative overflow-hidden">
@@ -40,9 +67,9 @@ const ContactSection = () => {
 
         <div className={`grid md:grid-cols-3 gap-6 ${isVisible ? "animate-fade-up stagger-2" : "opacity-0"}`}>
           {[
-            { icon: Mail, label: "Email", value: "Sonuskyadav30@gmail.com", href: "mailto:Sonuskyadav30@gmail.com" },
-            { icon: Phone, label: "Phone", value: "+91-6363742403", href: "tel:+916363742403" },
-            { icon: MapPin, label: "Location", value: "Belagavi, Karnataka", href: "#" },
+            { icon: Mail, label: "Email", value: contact.email, href: `mailto:${contact.email}` },
+            { icon: Phone, label: "Phone", value: contact.phone, href: `tel:${contact.phone.replace(/[^0-9+]/g, "")}` },
+            { icon: MapPin, label: "Location", value: contact.location, href: "#" },
           ].map((item) => (
             <a
               key={item.label}
@@ -62,7 +89,7 @@ const ContactSection = () => {
 
         <div className={`mt-12 text-center ${isVisible ? "animate-fade-up stagger-3" : "opacity-0"}`}>
           <a
-            href="mailto:Sonuskyadav30@gmail.com"
+            href={`mailto:${contact.email}`}
             className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-primary text-primary-foreground font-heading font-semibold text-sm hover:opacity-90 transition-opacity glow-primary"
           >
             <Send size={16} /> Say Hello

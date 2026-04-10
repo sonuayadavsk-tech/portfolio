@@ -4,19 +4,31 @@ import { ArrowDown, Github, Linkedin, Mail } from "lucide-react";
 const HeroSection = () => {
   const [loaded, setLoaded] = useState(false);
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
+  const [socialLinks, setSocialLinks] = useState({
+    linkedin: "https://linkedin.com/in/sonu-yadav-b1272a269",
+    github: "https://github.com/Sonusk4",
+    email: "Sonuskyadav30@gmail.com"
+  });
 
   useEffect(() => {
     setLoaded(true);
-    fetchResumeUrl();
+    fetchPortfolioData();
   }, []);
 
-  const fetchResumeUrl = async () => {
+  const fetchPortfolioData = async () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
       const response = await fetch(`${apiUrl}/api/portfolio`);
       const data = await response.json();
       if (data.resumeUrl) {
         setResumeUrl(data.resumeUrl);
+      }
+      if (data.contact) {
+        setSocialLinks({
+          linkedin: data.contact.linkedin || socialLinks.linkedin,
+          github: data.contact.github || socialLinks.github,
+          email: data.contact.email || socialLinks.email
+        });
       }
     } catch (e) {
       console.error(e);
@@ -74,7 +86,7 @@ const HeroSection = () => {
 
             <div className="animate-fade-up stagger-4 flex items-center justify-center gap-4 mb-16">
               <a
-                href="https://github.com/Sonusk4"
+                href={socialLinks.github}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-3 rounded-full border border-border hover:border-primary hover:text-primary transition-all duration-300 text-muted-foreground"
@@ -82,7 +94,7 @@ const HeroSection = () => {
                 <Github size={20} />
               </a>
               <a
-                href="https://linkedin.com/in/sonu-yadav-b1272a269"
+                href={socialLinks.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-3 rounded-full border border-border hover:border-primary hover:text-primary transition-all duration-300 text-muted-foreground"
@@ -90,7 +102,7 @@ const HeroSection = () => {
                 <Linkedin size={20} />
               </a>
               <a
-                href="mailto:Sonuskyadav30@gmail.com"
+                href={`mailto:${socialLinks.email}`}
                 className="p-3 rounded-full border border-border hover:border-primary hover:text-primary transition-all duration-300 text-muted-foreground"
               >
                 <Mail size={20} />
