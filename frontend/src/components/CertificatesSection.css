@@ -1,0 +1,171 @@
+.certificate-carousel {
+    position: relative;
+    width: 100%;
+}
+
+.certificate-carousel-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.certificate-carousel-main {
+    flex: 1;
+    min-width: 0;
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+.certificate-carousel-viewport {
+    animation: certSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes certSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.certificate-carousel-arrow {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 999px;
+    border: 1px solid hsl(var(--border) / 0.5);
+    background: hsl(var(--card) / 0.8);
+    backdrop-filter: blur(8px);
+    color: hsl(var(--foreground));
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 20;
+}
+
+.certificate-carousel-arrow:hover {
+    background: hsl(var(--primary));
+    color: #fff;
+    border-color: hsl(var(--primary));
+    transform: scale(1.1);
+}
+
+.certificate-carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-top: 2rem;
+}
+
+.certificate-carousel-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    background: hsl(var(--muted-foreground) / 0.3);
+    transition: all 0.3s ease;
+}
+
+.certificate-carousel-dot.active {
+    background: hsl(var(--primary));
+    transform: scale(1.25);
+}
+
+.certificate-card {
+    perspective: 1200px;
+    position: relative;
+    background: transparent;
+    border-radius: 1em;
+    height: 400px;
+    cursor: pointer;
+}
+
+.certificate-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 1em;
+    background: hsl(var(--card) / 0.8);
+    backdrop-filter: blur(8px);
+    border: 1px solid hsl(var(--border));
+    overflow: hidden;
+    box-shadow:
+        0 0.125em 0.3125em rgba(0, 0, 0, 0.25),
+        0 0.02125em 0.06125em rgba(0, 0, 0, 0.25);
+}
+
+.certificate-image-container {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: hsl(var(--muted));
+    z-index: 1;
+}
+
+.certificate-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.7s ease-in-out;
+}
+
+/* The Reveal Flap / Detail Section */
+.certificate-details {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 55%;
+    /* Covers slightly more than half to show some image at top */
+    background: #333232 linear-gradient(180deg, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.4));
+    border-radius: 0 0 1em 1em;
+    transform-origin: center bottom;
+    transform: rotateX(0deg);
+    transition: 0.7s ease-in-out transform;
+    z-index: 10;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+}
+
+/* On hover, the detail area flips DOWN and OUT to reveal the full image */
+.certificate-card:hover .certificate-details {
+    transform: rotateX(-120deg);
+    /* Flip it away */
+    opacity: 0.1;
+    /* Fade slightly to see image through it if needed, or keep for context */
+}
+
+/* Adjust text colors for the dark flap */
+.certificate-details h3,
+.certificate-details p {
+    color: #fff !important;
+}
+
+.certificate-card:hover .certificate-image {
+    transform: scale(1.08);
+    /* Subtle zoom when revealed */
+}
+
+/* Mobile Tweaks */
+@media (max-width: 640px) {
+    .certificate-card {
+        height: 380px;
+    }
+
+    .certificate-details {
+        height: 60%;
+        /* More room for text on mobile */
+    }
+}
