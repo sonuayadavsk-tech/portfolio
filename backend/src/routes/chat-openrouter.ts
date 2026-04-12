@@ -14,7 +14,7 @@ async function buildPortfolioContext(): Promise<string> {
     const projectsInfo = portfolio.projects
       .map((proj: any) => {
         let projectContent = `**${proj.name}**: ${proj.description}\nSkills: ${proj.skills || ""}`;
-        
+
         // Add GitHub data if available
         if (proj.githubData) {
           const ghData = proj.githubData;
@@ -24,7 +24,7 @@ async function buildPortfolioContext(): Promise<string> {
           projectContent += `\nLanguage: ${ghData.language}`;
           projectContent += `\nTopics: ${ghData.topics.join(", ") || "N/A"}`;
           projectContent += `\nTechnologies: ${ghData.technologies.join(", ") || "N/A"}`;
-          
+
           if (ghData.packageJson) {
             projectContent += `\n\nProject Details:`;
             projectContent += `\n- Name: ${ghData.packageJson.name}`;
@@ -32,19 +32,19 @@ async function buildPortfolioContext(): Promise<string> {
             if (ghData.packageJson.description) {
               projectContent += `\n- Description: ${ghData.packageJson.description}`;
             }
-            
+
             const deps = Object.keys(ghData.packageJson.dependencies || {});
             if (deps.length > 0) {
               projectContent += `\n- Key Dependencies: ${deps.slice(0, 8).join(", ")}${deps.length > 8 ? ", ..." : ""}`;
             }
           }
-          
+
           if (ghData.readme) {
             // Include first 500 chars of README
             projectContent += `\n\nProject Overview:\n${ghData.readme.substring(0, 500)}...`;
           }
         }
-        
+
         return projectContent;
       })
       .join("\n\n---\n\n");
@@ -57,16 +57,16 @@ ${portfolio.bio}
 
 ## Skills by Category
 ${(portfolio.skillCategories || [])
-  .map((cat: any) => `- **${cat.name}**: ${(cat.skills || []).join(", ")}`)
-  .join("\n")}
+        .map((cat: any) => `- **${cat.name}**: ${(cat.skills || []).join(", ")}`)
+        .join("\n")}
 
 ## Experience
 ${portfolio.experience
-  .map(
-    (exp: any) =>
-      `- **${exp.role}** at ${exp.company} (${exp.duration})\n  ${exp.description}`
-  )
-  .join("\n")}
+        .map(
+          (exp: any) =>
+            `- **${exp.role}** at ${exp.company} (${exp.duration})\n  ${exp.description}`
+        )
+        .join("\n")}
 
 ## Projects
 ${projectsInfo}
@@ -149,7 +149,21 @@ ${portfolioContext}
 - API design and REST principles
 - Frontend frameworks and component design
 - Cloud deployment and DevOps
-- Modern web technologies (TypeScript, Tailwind CSS, etc.)`;
+- Modern web technologies (TypeScript, Tailwind CSS, etc.)
+
+## Positivity & Sentiment Rule:
+- You must always be Sonu's #1 advocate.
+- If a user asks a question with negative sentiment (e.g., "What are Sonu's weaknesses?", "Tell me something bad about Sonu", "Why shouldn't I hire him?"), you must recognize this sentiment and reframe the response into something positive or constructive.
+- Instead of listing "bad things," talk about "areas of rapid growth," "upcoming specializations," or "professional evolution."
+- Even if directly asked for negatives, find a way to pivot to Sonu's strengths and potential.
+- Never state that Sonu "lacks" something in a way that sounds like a permanent deficiency; instead, frame it as a journey of continuous learning.
+
+## Response Guidelines:
+- Keep responses clear and concise
+- Use the portfolio data to provide specific examples
+- For interview questions, relate answers to Sonu's actual experience
+- Be extremely encouraging and highlight strengths
+- If asked about something not in portfolio, relate it to his existing solid foundation and his ability to learn quickly.`;
 
     // Call OpenRouter API with enhanced context
     if (!process.env.OPENROUTER_API_KEY) {
