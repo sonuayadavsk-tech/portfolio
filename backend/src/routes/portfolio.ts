@@ -42,17 +42,23 @@ router.put("/", async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
+    // CRITICAL: Strip immutable fields that might be sent from frontend
+    // This prevents "Immutable field _id was found to have been modified" errors
+    const updateData = { ...req.body };
+    delete updateData._id;
+    delete updateData.__v;
+
     // Filter out empty stats
-    if (req.body.stats) {
-      req.body.stats = req.body.stats.filter((stat: any) => stat.label && stat.value);
+    if (updateData.stats) {
+      updateData.stats = updateData.stats.filter((stat: any) => stat.label && stat.value);
     }
 
     let portfolio = await Portfolio.findOne();
 
     if (!portfolio) {
-      portfolio = new Portfolio(req.body);
+      portfolio = new Portfolio(updateData);
     } else {
-      Object.assign(portfolio, req.body);
+      Object.assign(portfolio, updateData);
     }
 
     await portfolio.save();
@@ -75,6 +81,11 @@ router.put("/:section", async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
+    // Strip immutable fields
+    const updateData = { ...req.body };
+    delete updateData._id;
+    delete updateData.__v;
+
     // Validate section
     const validSections = ["projects", "experience", "skills", "bio", "contact", "achievements"];
     if (!validSections.includes(section)) {
@@ -91,23 +102,19 @@ router.put("/:section", async (req: Request, res: Response) => {
     if (section === "projects") {
       // Fetch GitHub data for projects with GitHub URLs
       const updatedProjects = await Promise.all(
-        req.body.projects.map(async (project: any) => {
+        updateData.projects.map(async (project: any) => {
+          // ... (existing GitHub logic remains same, but use project variable)
           if (project.github && isValidGitHubUrl(project.github)) {
-            // Check if GitHub data is already fetched and not too old (24 hours)
             if (
               project.githubData &&
               project.githubData.fetchedAt &&
               Date.now() - new Date(project.githubData.fetchedAt).getTime() < 24 * 60 * 60 * 1000
             ) {
-              console.log(`✅ Using cached GitHub data for ${project.name}`);
               return project;
             }
-
-            // Fetch fresh GitHub data
             const githubData = await fetchGitHubRepoData(project.github);
             if (githubData) {
               project.githubData = githubData;
-              console.log(`✅ Updated GitHub data for ${project.name}`);
             }
           }
           return project;
@@ -115,22 +122,20 @@ router.put("/:section", async (req: Request, res: Response) => {
       );
       portfolio.projects = updatedProjects;
     } else if (section === "experience") {
-      console.log("📥 Updating experience. Data received:", JSON.stringify(req.body.experience, null, 2));
-      portfolio.experience = req.body.experience;
+      portfolio.experience = updateData.experience;
       portfolio.markModified("experience");
     } else if (section === "achievements") {
-      portfolio.achievements = req.body.achievements;
+      portfolio.achievements = updateData.achievements;
     } else if (section === "skills") {
-      // Handle both flat array and categorized skills
-      if (req.body.skillCategories) {
-        portfolio.skillCategories = req.body.skillCategories;
-      } else if (req.body.skills) {
-        portfolio.skills = req.body.skills;
+      if (updateData.skillCategories) {
+        portfolio.skillCategories = updateData.skillCategories;
+      } else if (updateData.skills) {
+        portfolio.skills = updateData.skills;
       }
     } else if (section === "bio") {
-      portfolio.bio = req.body.bio;
+      portfolio.bio = updateData.bio;
     } else if (section === "contact") {
-      portfolio.contact = req.body.contact;
+      portfolio.contact = updateData.contact;
     }
 
     await portfolio.save();

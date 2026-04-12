@@ -59,7 +59,14 @@ export const uploadAPI = {
 
   uploadProgressCardImage: (file: File) => uploadAPI.uploadProjectImage(file),
   uploadCertificateImage: (file: File) => uploadAPI.uploadProjectImage(file),
-  uploadResumeFile: (file: File) => uploadAPI.uploadProjectImage(file),
+  uploadResumeFile: (file: File) => {
+    const formData = new FormData();
+    formData.append("resume", file);
+    return api.post("/api/upload/resume", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      params: { password: ADMIN_PASSWORD },
+    });
+  },
 };
 
 export const chatAPI = {
